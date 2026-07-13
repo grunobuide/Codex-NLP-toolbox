@@ -1,81 +1,68 @@
 # Codex NLP Toolbox
 
-A lightweight, classroom-friendly NLP toolbox for Python users. The goal is to help students and learners **upload raw text**, run **multiple NLP techniques**, and immediately see how the techniques behave across **different languages**.
+A reproducible, evaluation-driven NLP toolbox for **transparent linguistic baselines**.
 
-The app is intentionally built for **explainable NLP workflows**: each tool includes context for:
-- what the tool does,
-- how it works internally,
-- why it is useful,
-- what to explore next.
+Every method here is an interpretable baseline: rule-based, lexicon-based, or frequency-based, implemented from scratch with no ML dependencies. You can trace any output back to the exact heuristic that produced it. A Streamlit app wraps the library so each result can be inspected alongside an explanation of the mechanism behind it.
 
-## ✨ Features
-- Upload text files or paste raw text.
-- Language-aware processing with simple language detection heuristics.
-- NLP building blocks: sentence splitting, tokenization, n-grams, keyword extraction, frequency tables.
-- Thematic organization of tools (descriptive stats, sentiment, information extraction, language profile, text structure).
-- Built-in method catalog for step-by-step technique explanations.
-- Designed for **learning and experimentation** rather than heavy production pipelines.
+## Why interpretable baselines?
 
-## 🚀 Quickstart
+Before reaching for a model, you need a floor to compare against and a mechanism you can reason about. This project provides that floor: methods whose behavior is fully inspectable, so their failure modes can be documented rather than guessed. It is aimed at NLP courses, hands-on labs, and anyone who wants to understand what simple methods can and cannot do before adding complexity.
+
+## Features
+
+- Pure-Python NLP building blocks: sentence splitting, tokenization, n-grams, stopword filtering, keyword extraction.
+- Descriptive statistics: lexical counts, word-length distribution, Flesch Reading Ease.
+- Lexicon-based sentiment analysis with normalized polarity score.
+- Heuristic language detection (English, Spanish, French, German, Italian, Portuguese) with per-language evidence you can inspect.
+- Streamlit UI where every result is paired with a what/how/why explanation of the method.
+
+## Installation
+
+Requires Python 3.10–3.13. With [uv](https://docs.astral.sh/uv/) (recommended):
+
+```bash
+git clone https://github.com/grunobuide/Codex-NLP-toolbox.git
+cd Codex-NLP-toolbox
+uv sync                # reproducible install from uv.lock
+uv run streamlit run app.py
+```
+
+With pip:
+
 ```bash
 python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -e .
 streamlit run app.py
 ```
 
-Open the provided local URL in your browser.
+For development (tests included):
 
-## 📁 Project Structure
-```
-.
-├── app.py               # Streamlit UI
-├── nlp_toolbox/
-│   ├── __init__.py
-│   ├── languages.py     # Language configuration + stopwords
-│   └── tools.py         # Core NLP utilities
-└── requirements.txt
+```bash
+uv sync --group dev
+uv run pytest
 ```
 
-## 🧭 NLP Tool Taxonomy
+## Method catalog
 
-### Descriptive statistics
-- `analyze_text`: text-level counts and lexical metrics.
-- `readability_score`: Flesch Reading Ease using sentence/word/syllable heuristics.
-- `top_ngrams`: most frequent phrase patterns.
-- `word_length_distribution`: token-length profile.
+| Category | Function | Mechanism |
+|---|---|---|
+| Descriptive stats | `analyze_text` | text-level counts and lexical metrics |
+| Descriptive stats | `readability_score` | Flesch Reading Ease via sentence/word/syllable heuristics |
+| Descriptive stats | `top_ngrams`, `word_length_distribution` | frequency counting |
+| Sentiment | `sentiment_analysis` | lexicon lookup, normalized polarity |
+| Information extraction | `extract_keywords` | stopword-filtered term frequency ranking |
+| Language profile | `detect_language`, `language_hint_hits` | hint-word overlap with inspectable per-language evidence |
+| Text structure | `split_sentences`, `tokenize_text`, `filter_tokens`, `generate_ngrams` | regex segmentation and token windows |
 
-### Sentiment analysis
-- `sentiment_analysis`: lexicon-based positive/negative count and normalized polarity score.
+## Non-goals
 
-### Information extraction
-- `extract_keywords`: stopword-filtered term frequency ranking.
+This project deliberately does **not** aim to:
 
-### Language profile
-- `detect_language`: hint-word overlap across supported languages.
-- `language_hint_hits`: per-language evidence for explainable detection.
+- Compete with production NLP libraries (spaCy, NLTK, Hugging Face) on accuracy or coverage.
+- Include machine-learned models, embeddings, or LLM calls — every method stays hand-inspectable.
+- Serve as production infrastructure. There is no API server, orchestration, or deployment tooling beyond the demo app.
+- Support every language. Language-aware features cover six European languages via explicit lexicons.
 
-### Text structure
-- `split_sentences`: regex sentence segmentation.
-- `tokenize_text`: regex word tokenization.
-- `filter_tokens`: stopword/min-length filtering.
-- `generate_ngrams`: contiguous token windows.
+If a task needs state-of-the-art accuracy, use these methods as the baseline to beat, not the solution.
 
-## 🔍 Explainability-First Workflow
-Each result in the app can be read in two layers:
-1. **Processing output** (metrics, lists, distributions).
-2. **Method explanation** (what/how/why/explore-next) so users can inspect assumptions and limitations.
-
-This design helps learners understand both the output and the mechanism that produced it.
-
-## 🧠 Designed for NLP Courses
-This repo focuses on **transparent, minimal implementations** to make the inner workings of NLP tools easy to explore. It is ideal for:
-- Intro NLP lectures
-- Hands-on labs
-- Student experimentation
-
-## 🔧 Extending the Toolbox
-Add additional tools (lemmatizers, POS taggers, NER, transformers) by plugging in libraries like spaCy, NLTK, or HuggingFace. Keep new tools in `nlp_toolbox/tools.py` or create new modules and expose them in `app.py`.
-
-## 📝 License
-MIT
