@@ -1,8 +1,7 @@
 import re
 from collections import Counter
-from typing import Dict, List
 
-from nlp_toolbox.languages import LANGUAGE_OPTIONS, get_language_config
+from nlp_toolbox.languages import LANGUAGE_OPTIONS, LanguageConfig, get_language_config
 
 WORD_PATTERN = re.compile(r"[\w']+", re.UNICODE)
 SENTENCE_PATTERN = re.compile(r"(?<=[.!?])\s+")
@@ -41,7 +40,7 @@ NEGATIVE_WORDS = {
 }
 
 
-def analyze_text(text: str, tokens: List[str], sentences: List[str]) -> dict:
+def analyze_text(text: str, tokens: list[str], sentences: list[str]) -> dict[str, float]:
     average_word_length = round(sum(len(token) for token in tokens) / max(len(tokens), 1), 2)
     average_sentence_length = round(len(tokens) / max(len(sentences), 1), 2)
     unique_words = len(set(tokens))
@@ -59,7 +58,7 @@ def analyze_text(text: str, tokens: List[str], sentences: List[str]) -> dict:
     }
 
 
-def split_sentences(text: str) -> List[str]:
+def split_sentences(text: str) -> list[str]:
     text = text.strip()
     if not text:
         return []
@@ -67,7 +66,7 @@ def split_sentences(text: str) -> List[str]:
     return [sentence.strip() for sentence in sentences if sentence.strip()]
 
 
-def tokenize_text(text: str, config: dict, lowercase: bool = True) -> List[str]:
+def tokenize_text(text: str, config: LanguageConfig, lowercase: bool = True) -> list[str]:
     tokens = [match.group(0) for match in WORD_PATTERN.finditer(text)]
     if lowercase:
         tokens = [token.lower() for token in tokens]
@@ -75,31 +74,36 @@ def tokenize_text(text: str, config: dict, lowercase: bool = True) -> List[str]:
 
 
 def filter_tokens(
-    tokens: List[str], config: dict, remove_stopwords: bool = True, min_length: int = 1
-) -> List[str]:
-    stopwords = config.get("stopwords", set()) if remove_stopwords else set()
+    tokens: list[str],
+    config: LanguageConfig,
+    remove_stopwords: bool = True,
+    min_length: int = 1,
+) -> list[str]:
+    stopwords = config["stopwords"] if remove_stopwords else set()
     return [token for token in tokens if token not in stopwords and len(token) >= min_length]
 
 
-def generate_ngrams(tokens: List[str], n: int) -> List[str]:
+def generate_ngrams(tokens: list[str], n: int) -> list[str]:
     if n <= 1:
         return tokens
     return [" ".join(tokens[i : i + n]) for i in range(len(tokens) - n + 1)]
 
 
-def extract_keywords(tokens: List[str], config: dict, top_k: int = 10) -> List[dict]:
+def extract_keywords(
+    tokens: list[str], config: LanguageConfig, top_k: int = 10
+) -> list[dict[str, str | int]]:
     filtered = filter_tokens(tokens, config, remove_stopwords=True, min_length=1)
     frequencies = Counter(filtered).most_common(top_k)
     return [{"term": term, "count": count} for term, count in frequencies]
 
 
-def top_ngrams(tokens: List[str], n: int, top_k: int = 10) -> List[dict]:
+def top_ngrams(tokens: list[str], n: int, top_k: int = 10) -> list[dict[str, str | int]]:
     ngrams = generate_ngrams(tokens, n)
     frequencies = Counter(ngrams).most_common(top_k)
     return [{"ngram": term, "count": count} for term, count in frequencies]
 
 
-def readability_score(text: str, tokens: List[str], sentences: List[str]) -> float:
+def readability_score(text: str, tokens: list[str], sentences: list[str]) -> float:
     if not tokens or not sentences:
         return 0.0
     syllables = sum(_estimate_syllables(token) for token in tokens)
@@ -109,7 +113,7 @@ def readability_score(text: str, tokens: List[str], sentences: List[str]) -> flo
     return round(score, 2)
 
 
-def sentiment_analysis(tokens: List[str]) -> Dict[str, float]:
+def sentiment_analysis(tokens: list[str]) -> dict[str, float]:
     positive = sum(1 for token in tokens if token in POSITIVE_WORDS)
     negative = sum(1 for token in tokens if token in NEGATIVE_WORDS)
     total = max(len(tokens), 1)
@@ -121,12 +125,12 @@ def sentiment_analysis(tokens: List[str]) -> Dict[str, float]:
     }
 
 
-def word_length_distribution(tokens: List[str]) -> Dict[int, int]:
+def word_length_distribution(tokens: list[str]) -> dict[int, int]:
     lengths = Counter(len(token) for token in tokens)
     return dict(sorted(lengths.items(), key=lambda item: item[0]))
 
 
-def language_hint_hits(tokens: List[str]) -> Dict[str, int]:
+def language_hint_hits(tokens: list[str]) -> dict[str, int]:
     scores = {}
     for language in LANGUAGE_OPTIONS:
         config = get_language_config(language)
@@ -142,7 +146,7 @@ def detect_language(text: str) -> str:
 
     scores = language_hint_hits(tokens)
 
-    best_language = max(scores, key=scores.get)
+    best_language = max(scores, key=lambda language: scores[language])
     if scores[best_language] == 0:
         return "English"
     return best_language

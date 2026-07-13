@@ -1,5 +1,10 @@
 # Codex NLP Toolbox
 
+[![CI](https://github.com/grunobuide/Codex-NLP-toolbox/actions/workflows/ci.yml/badge.svg)](https://github.com/grunobuide/Codex-NLP-toolbox/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+![Coverage floor](https://img.shields.io/badge/coverage%20floor-90%25-brightgreen)
+
 A reproducible, evaluation-driven NLP toolbox for **transparent linguistic baselines**.
 
 Every method here is an interpretable baseline: rule-based, lexicon-based, or frequency-based, implemented from scratch with no ML dependencies. You can trace any output back to the exact heuristic that produced it. A Streamlit app wraps the library so each result can be inspected alongside an explanation of the mechanism behind it.
@@ -60,9 +65,4 @@ uv run pytest
 This project deliberately does **not** aim to:
 
 - Compete with production NLP libraries (spaCy, NLTK, Hugging Face) on accuracy or coverage.
-- Include machine-learned models, embeddings, or LLM calls — every method stays hand-inspectable.
-- Serve as production infrastructure. There is no API server, orchestration, or deployment tooling beyond the demo app.
-- Support every language. Language-aware features cover six European languages via explicit lexicons.
-
-If a task needs state-of-the-art accuracy, use these methods as the baseline to beat, not the solution.
-
+- I

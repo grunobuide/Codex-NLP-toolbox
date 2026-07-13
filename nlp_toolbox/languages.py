@@ -1,3 +1,14 @@
+from typing import TypedDict
+
+
+class LanguageConfig(TypedDict):
+    """Bundle of language-specific resources used across the toolbox."""
+
+    name: str
+    stopwords: set[str]
+    hints: set[str]
+
+
 LANGUAGE_OPTIONS = ["English", "Spanish", "French", "German", "Italian", "Portuguese"]
 
 STOPWORDS = {
@@ -111,7 +122,7 @@ LANGUAGE_HINTS = {
 }
 
 
-def get_language_config(language_name: str) -> dict:
+def get_language_config(language_name: str) -> LanguageConfig:
     return {
         "name": language_name,
         "stopwords": STOPWORDS.get(language_name, set()),

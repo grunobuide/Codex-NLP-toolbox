@@ -5,6 +5,7 @@ from nlp_toolbox.tools import (
     analyze_text,
     detect_language,
     extract_keywords,
+    filter_tokens,
     generate_ngrams,
     language_hint_hits,
     readability_score,
@@ -13,7 +14,6 @@ from nlp_toolbox.tools import (
     tokenize_text,
     top_ngrams,
     word_length_distribution,
-    filter_tokens,
 )
 
 st.set_page_config(page_title="Codex NLP Toolbox", layout="wide")
@@ -22,9 +22,15 @@ TOOL_EXPLANATIONS = {
     "analyze_text": {
         "theme": "Descriptive statistics",
         "what": "Counts and ratio-based summary metrics for the current text.",
-        "how": "Uses token and sentence counts to compute averages, lexical diversity, and reading-time estimate.",
+        "how": (
+            "Uses token and sentence counts to compute averages, lexical diversity, "
+            "and reading-time estimate."
+        ),
         "why": "Gives a fast baseline profile before deeper NLP modeling.",
-        "explore": "Compare lexical diversity and sentence length between authors, genres, or translations.",
+        "explore": (
+            "Compare lexical diversity and sentence length between authors, genres, "
+            "or translations."
+        ),
     },
     "split_sentences": {
         "theme": "Text structure",
@@ -123,6 +129,7 @@ def render_tool_explanation(tool_name: str) -> None:
         st.markdown(f"- **Why it matters:** {details['why']}")
         st.markdown(f"- **Explore next:** {details['explore']}")
 
+
 st.markdown(
     """
     <style>
@@ -156,8 +163,7 @@ st.markdown(
 
 st.title("Codex NLP Toolbox")
 st.write(
-    "Upload a text file or paste raw text, then explore NLP techniques "
-    "across multiple languages."
+    "Upload a text file or paste raw text, then explore NLP techniques across multiple languages."
 )
 st.caption(
     "This interface is organized by NLP themes and includes method cards "
@@ -168,9 +174,7 @@ with st.sidebar:
     st.header("Input")
     uploaded_file = st.file_uploader("Upload a text file", type=["txt"])
     text_input = st.text_area("Or paste raw text", height=200)
-    language_choice = st.selectbox(
-        "Language", options=["Auto"] + LANGUAGE_OPTIONS, index=0
-    )
+    language_choice = st.selectbox("Language", options=["Auto"] + LANGUAGE_OPTIONS, index=0)
     st.header("Customizations")
     lowercase_tokens = st.checkbox("Lowercase tokens", value=True)
     remove_stopwords = st.checkbox("Remove stopwords", value=True)
@@ -253,17 +257,13 @@ if text_content.strip():
         if show_sentences:
             st.markdown("### Sentence splitting")
             st.write(sentences[:10])
-            st.caption(
-                f"Showing {min(10, len(sentences))} of {len(sentences)} sentences"
-            )
+            st.caption(f"Showing {min(10, len(sentences))} of {len(sentences)} sentences")
             render_tool_explanation("split_sentences")
 
         if show_tokens:
             st.markdown("### Tokens")
             st.write(tokens[:max_preview_tokens])
-            st.caption(
-                f"Showing {min(max_preview_tokens, len(tokens))} of {len(tokens)} tokens"
-            )
+            st.caption(f"Showing {min(max_preview_tokens, len(tokens))} of {len(tokens)} tokens")
             render_tool_explanation("tokenize_text")
             render_tool_explanation("filter_tokens")
 
@@ -272,9 +272,7 @@ if text_content.strip():
             n_value = st.slider("N", 2, 5, 2)
             ngrams = generate_ngrams(tokens, n_value)
             st.write(ngrams[:30])
-            st.caption(
-                f"Showing {min(30, len(ngrams))} of {len(ngrams)} n-grams"
-            )
+            st.caption(f"Showing {min(30, len(ngrams))} of {len(ngrams)} n-grams")
             render_tool_explanation("generate_ngrams")
 
     with tabs[2]:
@@ -305,15 +303,11 @@ if text_content.strip():
 
     with tabs[5]:
         st.markdown("### NLP method catalog")
-        st.write(
-            "Use this as a map of all tools available in this app, grouped by theme."
-        )
+        st.write("Use this as a map of all tools available in this app, grouped by theme.")
         for theme in THEME_GROUPS:
             st.markdown(f"#### {theme}")
             themed_tools = [
-                name
-                for name, details in TOOL_EXPLANATIONS.items()
-                if details["theme"] == theme
+                name for name, details in TOOL_EXPLANATIONS.items() if details["theme"] == theme
             ]
             for tool_name in themed_tools:
                 render_tool_explanation(tool_name)
