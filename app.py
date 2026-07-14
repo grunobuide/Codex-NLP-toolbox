@@ -291,8 +291,9 @@ def render_compare() -> None:
                 f"Sample {label}", ["(paste below)", *SAMPLES], key=f"sample_{label}"
             )
             default = SAMPLES.get(choice, "")
+            # key includes the choice so switching samples refreshes the widget
             texts[label] = st.text_area(
-                f"Text {label}", value=default, height=150, key=f"text_{label}"
+                f"Text {label}", value=default, height=150, key=f"text_{label}_{choice}"
             )
     if not (texts["A"].strip() and texts["B"].strip()):
         st.info("Provide both texts to compare.")

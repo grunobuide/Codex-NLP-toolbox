@@ -1,0 +1,3 @@
+# Deployment manifest for Streamlit Community Cloud only.
+# Local/dev installs use pyproject.toml + uv.lock (see README).
+streamlit>=1.32

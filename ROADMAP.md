@@ -60,7 +60,7 @@ Document where the heuristics fail and why.
 
 ## Phase 5 — Public demo (~1 week)
 
-- [x] Deploy pipeline to Hugging Face Spaces: `.github/workflows/hf-space.yml` syncs on every push (needs HF_TOKEN secret + HF_SPACE variable).
+- [x] Public demo on Streamlit Community Cloud (HF Spaces now requires a paid tier for Docker, and the native Streamlit SDK was deprecated). `requirements.txt` is the Cloud deployment manifest; a HF Spaces sync workflow (`hf-space.yml`) remains available, gated on the `HF_SPACE` variable, if a Docker Space becomes viable later.
 - [x] Add a **Benchmarks** tab to the app rendering the eval JSON outputs.
 - [x] Licensed sample texts per language, one-click loadable.
 - [ ] Short GIF at the top of the README (record from the live Space). Exportable JSON from the app: done.
