@@ -85,8 +85,9 @@ Measured, not asserted — full tables, confusion matrices and dataset provenanc
 |---|---|---|
 | Language ID (180 Gutenberg sentences, 6 langs) | hint-words: 75.6% acc | langdetect: 99.4% acc |
 | Binary sentiment EN (120 UCI review sentences) | v1 lexicon: 76.7% acc | VADER: 80.0% acc |
+| Sentence segmentation EN (60 UD-EWT gold) | regex: F1 0.919 | pysbd: F1 0.975 |
 
-The transparent baselines are *expected* to lose to specialized systems — the value is knowing by how much, and why (see the planned error-analysis report).
+The transparent baselines are *expected* to lose to specialized systems — the value is knowing by how much, and why: see the [error analysis](docs/error-analysis.md), where every failure mode is measured, classified as inherent or fixable, and pinned by a regression test.
 
 ## Non-goals
 

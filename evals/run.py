@@ -20,8 +20,13 @@ from importlib.metadata import version
 from pathlib import Path
 from typing import Any
 
-from evals.metrics import accuracy, confusion_matrix, macro_f1
-from nlp_toolbox.tools import detect_language_details, sentiment_analysis, tokenize_text
+from evals.metrics import accuracy, confusion_matrix, macro_f1, sentence_prf
+from nlp_toolbox.tools import (
+    detect_language_details,
+    sentiment_analysis,
+    split_sentences,
+    tokenize_text,
+)
 
 ROOT = Path(__file__).resolve().parent
 NAME_TO_CODE = {
@@ -142,9 +147,40 @@ def _dataset_info(path: Path, n: int) -> dict[str, Any]:
     }
 
 
+def task_segmentation() -> dict[str, Any]:
+    import pysbd  # noqa: PLC0415
+
+    dataset = ROOT / "datasets" / "segmentation_en.txt"
+    gold_sentences = [
+        line.strip() for line in dataset.read_text(encoding="utf-8").splitlines() if line.strip()
+    ]
+    # deterministic paragraphs of 3 gold sentences joined by single spaces
+    paragraphs = [
+        (" ".join(gold_sentences[i : i + 3]), gold_sentences[i : i + 3])
+        for i in range(0, len(gold_sentences), 3)
+    ]
+    segmenter = pysbd.Segmenter(language="en", clean=False)
+    all_gold: list[str] = []
+    toolbox_pred: list[str] = []
+    pysbd_pred: list[str] = []
+    for paragraph, gold in paragraphs:
+        all_gold.extend(gold)
+        toolbox_pred.extend(split_sentences(paragraph))
+        pysbd_pred.extend(s.strip() for s in segmenter.segment(paragraph))
+    return {
+        "task": "sentence segmentation (English, UD-EWT gold)",
+        "dataset": _dataset_info(dataset, len(gold_sentences)),
+        "systems": {
+            "toolbox regex": sentence_prf(all_gold, toolbox_pred),
+            f"pysbd {version('pysbd')}": sentence_prf(all_gold, pysbd_pred),
+        },
+    }
+
+
 TASKS: dict[str, Callable[[], dict[str, Any]]] = {
     "langid": task_langid,
     "sentiment": task_sentiment,
+    "segmentation": task_segmentation,
 }
 
 
@@ -165,7 +201,10 @@ def main() -> int:
     out_file.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     print(f"wrote {out_file}")
     for name, scores in payload["systems"].items():
-        print(f"  {name}: accuracy={scores['accuracy']} macro_f1={scores['macro_f1']}")
+        summary = " ".join(
+            f"{key}={value}" for key, value in scores.items() if isinstance(value, int | float)
+        )
+        print(f"  {name}: {summary}")
     return 0
 
 

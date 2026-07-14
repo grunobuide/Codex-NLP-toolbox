@@ -34,7 +34,7 @@ Make the toolbox usable outside the browser.
 
 **Visible outcome:** a reviewer can `uv run codex-nlp analyze data/samples/... --json` ten seconds after cloning.
 
-## Phase 3 — Evaluation harness ✅ (segmentation baseline pending)
+## Phase 3 — Evaluation harness ✅
 
 The differentiator: stop asserting, start measuring.
 
@@ -42,28 +42,28 @@ The differentiator: stop asserting, start measuring.
 - [x] Small, public, licensed datasets checked in with a `DATASETS.md` documenting source, license, and sampling procedure. Candidates: Tatoeba sentences (CC-BY) for language ID across the six supported languages; SST-2/IMDb subset for sentiment; UD English EWT (CC BY-SA) sentence boundaries for segmentation.
 - [x] Task definitions, metrics (accuracy, macro-F1, per-language confusion matrix), fixed seeds, run configs.
 - [x] Structured outputs: one JSON per run recording git SHA, dataset hash, config, and scores — reproducible by anyone.
-- [x] External baselines to beat/lose to, honestly reported: `langdetect` (language ID), VADER (sentiment). Segmentation vs `pysbd` deferred to Phase 4 (needs UD gold data).
+- [x] External baselines to beat/lose to, honestly reported: `langdetect` (language ID), VADER (sentiment). Segmentation vs `pysbd` added in Phase 4 (UD-EWT gold).
 - [x] Results table auto-generated into `docs/benchmarks.md`.
 
 **Visible outcome:** a benchmark table in the README comparing this toolbox against known baselines, with numbers a reviewer can reproduce with one command.
 
-## Phase 4 — Error analysis (~1 week)
+## Phase 4 — Error analysis ✅
 
 Document where the heuristics fail and why.
 
-- [ ] Error taxonomy built from eval failures: short texts, code-switching, Unicode/emoji, malformed input, lexicon gaps, English-calibrated readability applied to other languages.
-- [ ] Property-based tests (Hypothesis) for robustness invariants: no crashes on arbitrary Unicode, empty input contracts, tokenizer stability.
-- [ ] Adversarial and ambiguous cases as regression fixtures.
-- [ ] `docs/error-analysis.md`: expected vs observed behavior, root causes, and which failures are inherent to the method vs fixable.
+- [x] Error taxonomy built from eval failures: short texts, code-switching, Unicode/emoji, malformed input, lexicon gaps, English-calibrated readability applied to other languages.
+- [x] Property-based tests (Hypothesis) for robustness invariants: no crashes on arbitrary Unicode, empty input contracts, tokenizer stability.
+- [x] Adversarial and ambiguous cases as regression fixtures.
+- [x] `docs/error-analysis.md`: expected vs observed behavior, root causes, and which failures are inherent to the method vs fixable.
 
 **Visible outcome:** a limitations report that demonstrates measurement-driven engineering judgment — the rarest artifact in portfolio repos.
 
 ## Phase 5 — Public demo (~1 week)
 
-- [ ] Deploy the Streamlit app to Hugging Face Spaces (free, serves Streamlit from the repo; also adds a public ML-community profile surface). Streamlit Community Cloud is the fallback.
-- [ ] Add a **Benchmarks** tab to the app rendering the eval JSON outputs.
-- [ ] Licensed sample texts per language, one-click loadable.
-- [ ] Short GIF at the top of the README; exportable outputs (JSON/CSV) from the app.
+- [x] Deploy pipeline to Hugging Face Spaces: `.github/workflows/hf-space.yml` syncs on every push (needs HF_TOKEN secret + HF_SPACE variable).
+- [x] Add a **Benchmarks** tab to the app rendering the eval JSON outputs.
+- [x] Licensed sample texts per language, one-click loadable.
+- [ ] Short GIF at the top of the README (record from the live Space). Exportable JSON from the app: done.
 
 **Visible outcome:** a live URL in the README and repo description — zero-setup proof it works.
 

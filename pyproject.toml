@@ -36,10 +36,12 @@ dev = [
     "ruff>=0.8",
     "mypy>=1.13",
     "pre-commit>=4.0",
+    "hypothesis>=6.100",
 ]
 evals = [
     "langdetect>=1.0.9",
     "vaderSentiment>=3.3.2",
+    "pysbd>=0.3.4",
 ]
 
 [build-system]

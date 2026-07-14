@@ -1,0 +1,22 @@
+{
+  "task": "sentence segmentation (English, UD-EWT gold)",
+  "dataset": {
+    "path": "evals/datasets/segmentation_en.txt",
+    "sha256": "a3cffaa51d6ae6b4ed59c54117680a78b4b81638223ec0d38bc4732d2477d1d1",
+    "n": 60
+  },
+  "systems": {
+    "toolbox regex": {
+      "precision": 0.8906,
+      "recall": 0.95,
+      "f1": 0.9194
+    },
+    "pysbd 0.3.4": {
+      "precision": 0.9672,
+      "recall": 0.9833,
+      "f1": 0.9752
+    }
+  },
+  "git_sha": "b27b4be2d44415ed30356dd3661b6e37deddc044",
+  "timestamp_utc": "2026-07-14T14:08:23+00:00"
+}

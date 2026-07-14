@@ -15,18 +15,27 @@ to specialized systems; the point is knowing by how much.
 
 ## language identification
 
-Dataset: `evals/datasets/langid.tsv` (n=180, sha256 `cc86e071ff1f…`) — run at 2026-07-14T13:55:36+00:00, commit `372c6a69e4`.
+Dataset: `evals/datasets/langid.tsv` (n=180, sha256 `cc86e071ff1f…`) — run at 2026-07-14T14:08:23+00:00, commit `b27b4be2d4`.
 
-| System | Accuracy | Macro-F1 |
+| System | accuracy | macro f1 |
 |---|---|---|
 | toolbox hint-words | 0.7556 | 0.7543 |
 | langdetect 1.0.9 | 0.9944 | 0.9944 |
 
+## sentence segmentation (English, UD-EWT gold)
+
+Dataset: `evals/datasets/segmentation_en.txt` (n=60, sha256 `a3cffaa51d6a…`) — run at 2026-07-14T14:08:23+00:00, commit `b27b4be2d4`.
+
+| System | precision | recall | f1 |
+|---|---|---|---|
+| toolbox regex | 0.8906 | 0.9500 | 0.9194 |
+| pysbd 0.3.4 | 0.9672 | 0.9833 | 0.9752 |
+
 ## binary sentiment (English)
 
-Dataset: `evals/datasets/sentiment_en.tsv` (n=120, sha256 `6e9bc36ec501…`) — run at 2026-07-14T13:55:36+00:00, commit `372c6a69e4`.
+Dataset: `evals/datasets/sentiment_en.tsv` (n=120, sha256 `6e9bc36ec501…`) — run at 2026-07-14T14:08:23+00:00, commit `b27b4be2d4`.
 
-| System | Accuracy | Macro-F1 |
+| System | accuracy | macro f1 |
 |---|---|---|
 | toolbox lexicon | 0.7667 | 0.7643 |
 | VADER 3.3.2 | 0.8000 | 0.7995 |

@@ -24,7 +24,7 @@ New tools, chosen because they appear in every intro NLP syllabus and stay hand-
 - [x] **KWIC concordance** (keyword in context) — the classic corpus-linguistics view.
 - [x] **Zipf's law plot** (rank–frequency) and **vocabulary growth curve** — highly visual, one-slide teachable.
 - [ ] **Porter stemmer** (English) as a worked example of rule-based normalization, with documented failure cases.
-- [ ] **Text comparison mode**: load two texts side by side — two authors, two translations, two registers — and compare every metric. This is the killer classroom feature.
+- [x] **Text comparison mode**: load two texts side by side — two authors, two translations, two registers — and compare every metric. This is the killer classroom feature.
 
 Every new method ships with: unit tests, a method card (what/how/why/explore), and an eval entry where a gold standard exists.
 
@@ -44,7 +44,7 @@ Plus **case studies** as runnable notebooks in `examples/` (Colab badge):
 
 ## Track 4 — Making usefulness visible
 
-- [ ] **Sample corpus pack**: short licensed texts for each of the six languages in `data/samples/`, one-click loadable in the app.
+- [x] **Sample corpus pack**: short licensed texts for each of the six languages in `data/samples/`, one-click loadable in the app.
 - [ ] **"Start here" tour** in the app: preloaded example with a guided reading of the results.
 - [ ] README section **"Use this to…"** with three concrete scenarios and screenshots: teach a lab, profile a corpus, establish a baseline before modeling.
 - [ ] **Instructor guide** (`docs/classroom.md`): a ready-to-use 90-minute lab plan with exercises and answers.

@@ -349,10 +349,13 @@ def zipf_table(tokens: list[str], top_k: int = 50) -> list[dict[str, str | int]]
 def vocabulary_growth(tokens: list[str], step: int = 100) -> list[dict[str, int]]:
     """Vocabulary size after every ``step`` tokens (type–token growth curve).
 
-    Includes a final point at the full token count. Sub-linear growth is
+    Includes a final point at the full token count. ``step`` must be >= 1
+    (raises ``ValueError`` otherwise). Sub-linear growth is
     expected (Heaps' law); a flattening curve means fewer new word types per
     token read.
     """
+    if step < 1:
+        raise ValueError("step must be >= 1")
     points = []
     seen: set[str] = set()
     for index, token in enumerate(tokens, start=1):

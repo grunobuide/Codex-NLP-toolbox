@@ -31,10 +31,17 @@ def main() -> int:
             f"sha256 `{data['dataset']['sha256'][:12]}…`) — "
             f"run at {data['timestamp_utc']}, commit `{data['git_sha'][:10]}`.\n"
         )
-        sections.append("| System | Accuracy | Macro-F1 |")
-        sections.append("|---|---|---|")
+        first = next(iter(data["systems"].values()))
+        metric_keys = [
+            key
+            for key, value in first.items()
+            if isinstance(value, int | float) and key != "zero_evidence_fraction"
+        ]
+        sections.append("| System | " + " | ".join(k.replace("_", " ") for k in metric_keys) + " |")
+        sections.append("|---|" + "---|" * len(metric_keys))
         for name, scores in data["systems"].items():
-            sections.append(f"| {name} | {scores['accuracy']:.4f} | {scores['macro_f1']:.4f} |")
+            cells = " | ".join(f"{scores[k]:.4f}" for k in metric_keys)
+            sections.append(f"| {name} | {cells} |")
         extra = data["systems"].get("toolbox lexicon", {}).get("zero_evidence_fraction")
         if extra is not None:
             sections.append(

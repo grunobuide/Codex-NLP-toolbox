@@ -46,3 +46,16 @@ Known biases: English only; product/restaurant/movie review register; short
 sentences. The multilingual gap of the toolbox's lexicons is documented in
 `docs/resources.md` and will be measured when multilingual labeled sets are
 added.
+
+## `segmentation_en.txt` — sentence segmentation gold, English (60 sentences)
+
+One gold sentence per line. Source: `# text =` annotations of the **test**
+split of [UD English EWT](https://github.com/UniversalDependencies/UD_English-EWT)
+(Universal Dependencies, CC BY-SA 4.0) — web text: reviews, emails, forums.
+Filtered to 40–120 chars ending in `.!?`; deduplicated; 60 sampled with a
+seeded shuffle (seed 42, LCG). At eval time sentences are joined into
+deterministic paragraphs of 3 (single spaces) and systems must recover the
+originals; scoring is exact-match multiset precision/recall/F1.
+
+Known biases: English only; contains abbreviation traps (Dr., Mrs., U.S.,
+W., '71) which is precisely why UD web text was chosen over literary prose.

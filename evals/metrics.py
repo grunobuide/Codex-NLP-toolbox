@@ -49,3 +49,21 @@ def macro_f1(gold: list[str], predicted: list[str]) -> float:
 def _check(gold: list[str], predicted: list[str]) -> None:
     if not gold or len(gold) != len(predicted):
         raise ValueError("gold and predicted must be equal-length, non-empty lists")
+
+
+def sentence_prf(gold: list[str], predicted: list[str]) -> dict[str, float]:
+    """Multiset precision/recall/F1 over exact (stripped) sentence matches.
+
+    A predicted sentence counts as correct only if it string-matches a gold
+    sentence exactly — over- and under-splitting both destroy matches, which
+    is the point.
+    """
+    from collections import Counter
+
+    gold_counts = Counter(g.strip() for g in gold)
+    pred_counts = Counter(p.strip() for p in predicted)
+    hits = sum((gold_counts & pred_counts).values())
+    precision = hits / max(sum(pred_counts.values()), 1)
+    recall = hits / max(sum(gold_counts.values()), 1)
+    f1 = 2 * precision * recall / (precision + recall) if precision + recall else 0.0
+    return {"precision": round(precision, 4), "recall": round(recall, 4), "f1": round(f1, 4)}
