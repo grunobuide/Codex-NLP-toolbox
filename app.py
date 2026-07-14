@@ -88,7 +88,11 @@ TOOL_EXPLANATIONS = {
     "sentiment_analysis": {
         "theme": "Sentiment analysis",
         "what": "Lexicon-based sentiment snapshot.",
-        "how": "Counts positive and negative seed words and normalizes by token count.",
+        "how": (
+            "Counts hits from the hand-curated lexicon of the detected language "
+            "(v1, ~75-100 words per polarity) and normalizes by token count. "
+            "No negation handling - see docs/resources.md."
+        ),
         "why": "Fast interpretable polarity estimate for teaching and quick diagnostics.",
         "explore": "Compare this lexicon baseline with VADER and transformer sentiment models.",
     },
@@ -397,7 +401,7 @@ if text_content.strip():
     with tabs[3]:
         if show_sentiment:
             st.markdown("### Sentiment snapshot")
-            sentiment = sentiment_analysis(tokens)
+            sentiment = sentiment_analysis(tokens, detected_language)
             st.json(sentiment)
             render_tool_explanation("sentiment_analysis")
 

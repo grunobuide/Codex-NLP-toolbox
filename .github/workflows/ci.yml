@@ -21,9 +21,9 @@ jobs:
       - name: Sync dependencies
         run: uv sync --group dev
       - name: Lint (ruff)
-        run: uv run ruff check nlp_toolbox tests app.py
+        run: uv run ruff check nlp_toolbox tests app.py evals
       - name: Format check (ruff)
-        run: uv run ruff format --check nlp_toolbox tests app.py
+        run: uv run ruff format --check nlp_toolbox tests app.py evals
       - name: Type check (mypy)
         run: uv run mypy
       - name: Tests with coverage

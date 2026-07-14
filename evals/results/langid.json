@@ -1,0 +1,120 @@
+{
+  "task": "language identification",
+  "dataset": {
+    "path": "evals/datasets/langid.tsv",
+    "sha256": "cc86e071ff1ffdc363c8df76bf9ce9db5508d32952313d48d2d7b7b24d3f87a1",
+    "n": 180
+  },
+  "systems": {
+    "toolbox hint-words": {
+      "accuracy": 0.7556,
+      "macro_f1": 0.7543,
+      "confusion": {
+        "de": {
+          "de": 24,
+          "en": 6,
+          "es": 0,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "en": {
+          "de": 0,
+          "en": 30,
+          "es": 0,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "es": {
+          "de": 0,
+          "en": 0,
+          "es": 26,
+          "fr": 3,
+          "it": 0,
+          "pt": 1
+        },
+        "fr": {
+          "de": 0,
+          "en": 6,
+          "es": 9,
+          "fr": 14,
+          "it": 0,
+          "pt": 1
+        },
+        "it": {
+          "de": 0,
+          "en": 3,
+          "es": 3,
+          "fr": 1,
+          "it": 20,
+          "pt": 3
+        },
+        "pt": {
+          "de": 0,
+          "en": 2,
+          "es": 6,
+          "fr": 0,
+          "it": 0,
+          "pt": 22
+        }
+      }
+    },
+    "langdetect 1.0.9": {
+      "accuracy": 0.9944,
+      "macro_f1": 0.9944,
+      "confusion": {
+        "de": {
+          "de": 30,
+          "en": 0,
+          "es": 0,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "en": {
+          "de": 0,
+          "en": 30,
+          "es": 0,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "es": {
+          "de": 0,
+          "en": 0,
+          "es": 30,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "fr": {
+          "de": 0,
+          "en": 0,
+          "es": 0,
+          "fr": 30,
+          "it": 0,
+          "pt": 0
+        },
+        "it": {
+          "de": 0,
+          "en": 0,
+          "es": 0,
+          "fr": 0,
+          "it": 30,
+          "pt": 0
+        },
+        "pt": {
+          "de": 0,
+          "en": 0,
+          "es": 1,
+          "fr": 0,
+          "it": 0,
+          "pt": 29
+        }
+      }
+    }
+  },
+  "git_sha": "372c6a69e49f7d3e30cb7f694bcad9086c4226d9",
+  "timestamp_utc": "2026-07-14T13:55:36+00:00"
+}

@@ -37,6 +37,10 @@ dev = [
     "mypy>=1.13",
     "pre-commit>=4.0",
 ]
+evals = [
+    "langdetect>=1.0.9",
+    "vaderSentiment>=3.3.2",
+]
 
 [build-system]
 requires = ["hatchling"]

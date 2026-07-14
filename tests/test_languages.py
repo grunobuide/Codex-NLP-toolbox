@@ -4,6 +4,7 @@ from nlp_toolbox.languages import (
     LANGUAGE_HINTS,
     LANGUAGE_OPTIONS,
     get_language_config,
+    load_sentiment_lexicon,
     load_stopwords,
 )
 
@@ -41,6 +42,24 @@ class TestLanguages(unittest.TestCase):
 
     def test_load_stopwords_is_cached(self):
         self.assertIs(load_stopwords("English"), load_stopwords("English"))
+
+
+class TestSentimentLexicons(unittest.TestCase):
+    def test_all_languages_have_lexicons(self):
+        for language in LANGUAGE_OPTIONS:
+            pos, neg = load_sentiment_lexicon(language)
+            with self.subTest(language=language):
+                self.assertGreater(len(pos), 70)
+                self.assertGreater(len(neg), 70)
+                self.assertFalse(pos & neg, "polarities must not overlap")
+
+    def test_unknown_language_gets_empty_sets(self):
+        self.assertEqual(load_sentiment_lexicon("Klingon"), (frozenset(), frozenset()))
+
+    def test_known_entries(self):
+        pos, neg = load_sentiment_lexicon("Portuguese")
+        self.assertIn("maravilhoso", pos)
+        self.assertIn("péssimo", neg)
 
 
 if __name__ == "__main__":

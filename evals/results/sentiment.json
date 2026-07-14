@@ -1,0 +1,41 @@
+{
+  "task": "binary sentiment (English)",
+  "dataset": {
+    "path": "evals/datasets/sentiment_en.tsv",
+    "sha256": "6e9bc36ec50178dad271fd815dae32c823f055e1c14fc60df65eafdd2e452f1c",
+    "n": 120
+  },
+  "systems": {
+    "toolbox lexicon": {
+      "accuracy": 0.7667,
+      "macro_f1": 0.7643,
+      "confusion": {
+        "0": {
+          "0": 52,
+          "1": 8
+        },
+        "1": {
+          "0": 20,
+          "1": 40
+        }
+      },
+      "zero_evidence_fraction": 0.475
+    },
+    "VADER 3.3.2": {
+      "accuracy": 0.8,
+      "macro_f1": 0.7995,
+      "confusion": {
+        "0": {
+          "0": 45,
+          "1": 15
+        },
+        "1": {
+          "0": 9,
+          "1": 51
+        }
+      }
+    }
+  },
+  "git_sha": "372c6a69e49f7d3e30cb7f694bcad9086c4226d9",
+  "timestamp_utc": "2026-07-14T13:55:36+00:00"
+}

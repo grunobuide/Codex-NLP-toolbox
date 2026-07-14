@@ -10,45 +10,15 @@ from collections import Counter
 from math import log10
 from typing import NamedTuple
 
-from nlp_toolbox.languages import LANGUAGE_OPTIONS, LanguageConfig, get_language_config
+from nlp_toolbox.languages import (
+    LANGUAGE_OPTIONS,
+    LanguageConfig,
+    get_language_config,
+    load_sentiment_lexicon,
+)
 
 WORD_PATTERN = re.compile(r"[\w']+", re.UNICODE)
 SENTENCE_PATTERN = re.compile(r"(?<=[.!?])\s+")
-
-# Hand-curated English seed lexicons. Placeholder status — see docs/resources.md.
-POSITIVE_WORDS = {
-    "good",
-    "great",
-    "excellent",
-    "positive",
-    "fortunate",
-    "correct",
-    "superior",
-    "happy",
-    "love",
-    "like",
-    "joy",
-    "delight",
-    "amazing",
-    "wonderful",
-    "bright",
-}
-NEGATIVE_WORDS = {
-    "bad",
-    "terrible",
-    "poor",
-    "negative",
-    "unfortunate",
-    "wrong",
-    "inferior",
-    "sad",
-    "hate",
-    "dislike",
-    "anger",
-    "awful",
-    "horrible",
-    "dark",
-}
 
 _VOWELS = "aeiouyáéíóúàèìòùâêîôûäëïöüãõœæ"
 
@@ -230,14 +200,18 @@ def readability_score(
     return round(score, 2)
 
 
-def sentiment_analysis(tokens: list[str]) -> dict[str, float]:
-    """Count positive/negative lexicon hits; score = (pos − neg) / tokens.
+def sentiment_analysis(tokens: list[str], language: str = "English") -> dict[str, float]:
+    """Count lexicon hits per polarity; score = (pos − neg) / tokens.
 
-    English-only seed lexicons (see ``docs/resources.md``); on other
-    languages this measures English loanwords, not sentiment.
+    Uses the hand-curated seed lexicon for ``language`` (v1, ~75–100 words
+    per polarity; see ``docs/resources.md``). No negation or intensifier
+    handling — "not good" counts as positive. That failure mode is measured
+    in ``docs/benchmarks.md`` and documented rather than hidden. Tokens must
+    be lowercase. Unsupported languages score 0 on everything.
     """
-    positive = sum(1 for token in tokens if token in POSITIVE_WORDS)
-    negative = sum(1 for token in tokens if token in NEGATIVE_WORDS)
+    positive_words, negative_words = load_sentiment_lexicon(language)
+    positive = sum(1 for token in tokens if token in positive_words)
+    negative = sum(1 for token in tokens if token in negative_words)
     total = max(len(tokens), 1)
     score = round((positive - negative) / total, 3)
     return {

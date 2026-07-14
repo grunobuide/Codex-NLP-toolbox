@@ -34,16 +34,16 @@ Make the toolbox usable outside the browser.
 
 **Visible outcome:** a reviewer can `uv run codex-nlp analyze data/samples/... --json` ten seconds after cloning.
 
-## Phase 3 — Evaluation harness (~1–2 weeks)
+## Phase 3 — Evaluation harness ✅ (segmentation baseline pending)
 
 The differentiator: stop asserting, start measuring.
 
-- [ ] Separate `evals/` layer (not shipped in the wheel), with its own dependency group.
-- [ ] Small, public, licensed datasets checked in with a `DATASETS.md` documenting source, license, and sampling procedure. Candidates: Tatoeba sentences (CC-BY) for language ID across the six supported languages; SST-2/IMDb subset for sentiment; UD English EWT (CC BY-SA) sentence boundaries for segmentation.
-- [ ] Task definitions, metrics (accuracy, macro-F1, per-language confusion matrix), fixed seeds, run configs.
-- [ ] Structured outputs: one JSON per run recording git SHA, dataset hash, config, and scores — reproducible by anyone.
-- [ ] External baselines to beat/lose to, honestly reported: `langid`/`langdetect` (language ID), VADER (sentiment), `pysbd` or NLTK Punkt (segmentation).
-- [ ] Results table auto-generated into `docs/benchmarks.md`.
+- [x] Separate `evals/` layer (not shipped in the wheel), with its own dependency group.
+- [x] Small, public, licensed datasets checked in with a `DATASETS.md` documenting source, license, and sampling procedure. Candidates: Tatoeba sentences (CC-BY) for language ID across the six supported languages; SST-2/IMDb subset for sentiment; UD English EWT (CC BY-SA) sentence boundaries for segmentation.
+- [x] Task definitions, metrics (accuracy, macro-F1, per-language confusion matrix), fixed seeds, run configs.
+- [x] Structured outputs: one JSON per run recording git SHA, dataset hash, config, and scores — reproducible by anyone.
+- [x] External baselines to beat/lose to, honestly reported: `langdetect` (language ID), VADER (sentiment). Segmentation vs `pysbd` deferred to Phase 4 (needs UD gold data).
+- [x] Results table auto-generated into `docs/benchmarks.md`.
 
 **Visible outcome:** a benchmark table in the README comparing this toolbox against known baselines, with numbers a reviewer can reproduce with one command.
 

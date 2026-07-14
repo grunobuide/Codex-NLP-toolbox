@@ -233,5 +233,25 @@ class TestDetectLanguageDetails(unittest.TestCase):
         self.assertFalse(details.fallback)
 
 
+class TestMultilingualSentiment(unittest.TestCase):
+    def test_portuguese(self):
+        result = sentiment_analysis(["dia", "maravilhoso", "feliz"], "Portuguese")
+        self.assertEqual(result["positive"], 2)
+        self.assertEqual(result["negative"], 0)
+
+    def test_spanish_negative(self):
+        result = sentiment_analysis(["una", "película", "horrible"], "Spanish")
+        self.assertEqual(result["negative"], 1)
+
+    def test_no_negation_handling_documented_behavior(self):
+        # "not good" counts the "good": known, documented limitation
+        result = sentiment_analysis(["not", "good"])
+        self.assertEqual(result["positive"], 1)
+
+    def test_unsupported_language_scores_zero(self):
+        result = sentiment_analysis(["good", "bad"], "Klingon")
+        self.assertEqual(result, {"positive": 0, "negative": 0, "score": 0.0})
+
+
 if __name__ == "__main__":
     unittest.main()

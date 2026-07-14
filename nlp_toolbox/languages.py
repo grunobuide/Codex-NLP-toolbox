@@ -57,6 +57,27 @@ def load_stopwords(language_name: str) -> frozenset[str]:
     return frozenset(line.strip() for line in text.splitlines() if line.strip())
 
 
+@cache
+def load_sentiment_lexicon(language_name: str) -> tuple[frozenset[str], frozenset[str]]:
+    """Load (positive, negative) word sets for ``language_name``.
+
+    Hand-curated v1 lexicons (~75-100 words per polarity per language);
+    methodology and limitations in ``docs/resources.md``. Unsupported
+    languages get empty sets, so sentiment scores degrade to 0 rather
+    than failing.
+    """
+    code = _LANGUAGE_CODES.get(language_name)
+    if code is None:
+        return frozenset(), frozenset()
+    base = resources.files("nlp_toolbox.resources.sentiment")
+
+    def _read(polarity: str) -> frozenset[str]:
+        text = base.joinpath(f"{code}_{polarity}.txt").read_text(encoding="utf-8")
+        return frozenset(line.strip() for line in text.splitlines() if line.strip())
+
+    return _read("positive"), _read("negative")
+
+
 def get_language_config(language_name: str) -> LanguageConfig:
     """Return the stopwords and detection hints for ``language_name``.
 

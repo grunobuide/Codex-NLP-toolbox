@@ -18,7 +18,7 @@ Before reaching for a model, you need a floor to compare against and a mechanism
 
 - Pure-Python NLP building blocks: sentence splitting, tokenization, n-grams, stopword filtering (real per-language lists, spaCy 3.8/MIT), keyword extraction.
 - Descriptive statistics: lexical counts, word-length distribution, and readability formulas calibrated per language (Flesch, Fernández Huerta, Kandel–Moles, Amstad, Franchina–Vacca, Martins et al.).
-- Lexicon-based sentiment analysis with normalized polarity score.
+- Lexicon-based sentiment analysis in all six languages (hand-curated v1 lexicons, documented methodology).
 - Heuristic language detection (English, Spanish, French, German, Italian, Portuguese) with per-language evidence you can inspect.
 - Streamlit UI where every result is paired with a what/how/why explanation of the method.
 
@@ -76,6 +76,17 @@ Language is auto-detected (`--lang` to override); `--json` gives stable, machine
 | Text structure | `kwic` | keyword-in-context concordance |
 | Language profile | `detect_language_details`, `language_hint_hits` | hint-word overlap; ties and English fallback reported explicitly |
 | Text structure | `split_sentences`, `tokenize_text`, `filter_tokens`, `generate_ngrams` | regex segmentation and token windows |
+
+## Benchmarks
+
+Measured, not asserted — full tables, confusion matrices and dataset provenance in [docs/benchmarks.md](docs/benchmarks.md), reproducible with `uv sync --group evals && uv run python -m evals.run --task <task>`:
+
+| Task (dataset) | Toolbox baseline | External system |
+|---|---|---|
+| Language ID (180 Gutenberg sentences, 6 langs) | hint-words: 75.6% acc | langdetect: 99.4% acc |
+| Binary sentiment EN (120 UCI review sentences) | v1 lexicon: 76.7% acc | VADER: 80.0% acc |
+
+The transparent baselines are *expected* to lose to specialized systems — the value is knowing by how much, and why (see the planned error-analysis report).
 
 ## Non-goals
 

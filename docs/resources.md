@@ -38,9 +38,23 @@ between closely related languages (Spanish/Portuguese). A character n-gram
 detector (Cavnar–Trenkle 1994) is planned as the stronger interpretable
 alternative — see CONTENT_ROADMAP Track 1.
 
-## Sentiment word lists (`tools.POSITIVE_WORDS` / `tools.NEGATIVE_WORDS`)
+## Sentiment lexicons (`nlp_toolbox/resources/sentiment/`)
 
-Hand-curated English seed lists (~15 words each). **Placeholder status**:
-English-only, tiny, and unweighted. Replacement with documented per-language
-lexicons is scheduled with the evaluation harness (engineering roadmap
-Phase 3), so the upgrade lands together with the measurement that proves it.
+Hand-curated v1 seed lexicons, one positive and one negative list per
+language (~75–105 words per polarity), lowercase, one word per line.
+
+Methodology: a common semantic core of sentiment-bearing vocabulary
+(evaluative adjectives, emotion nouns, success/failure verbs) curated per
+language, including frequent gender/number inflections for Romance
+languages and common adjective inflections for German. Curated by the
+project author; no automatic translation.
+
+Known limitations (measured in `docs/benchmarks.md`):
+
+- **No negation handling** — "not good" counts as positive.
+- **No intensifiers or weighting** — every word counts ±1.
+- **Partial morphology** — verb conjugations and many inflections are
+  missing; exact lowercase match only.
+- **Register** — general vocabulary; slang and domain jargon are absent.
+- Lexicon size is a teachable variable: the eval harness can measure
+  accuracy as a function of lexicon size (planned case study).
