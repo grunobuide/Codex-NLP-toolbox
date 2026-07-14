@@ -7,7 +7,6 @@ on:
 
 jobs:
   checks:
-    name: Lint, type-check, test (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -15,22 +14,22 @@ jobs:
         python-version: ["3.10", "3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Sync dependencies (locked)
-        run: uv sync --group dev --locked
-      - name: Lint
+      - name: Sync dependencies
+        run: uv sync --group dev
+      - name: Lint (ruff)
         run: uv run ruff check nlp_toolbox tests app.py
-      - name: Format check
+      - name: Format check (ruff)
         run: uv run ruff format --check nlp_toolbox tests app.py
-      - name: Type-check
+      - name: Type check (mypy)
         run: uv run mypy
-      - name: Tests with coverage floor
+      - name: Tests with coverage
         run: uv run pytest
 
-  install-smoke:
-    name: Clean install smoke test (Python ${{ matrix.python-version }})
+  install-smoke-test:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -41,12 +40,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Build package
-        run: |
-          python -m pip install --upgrade pip build
-          python -m build
-      - name: Install wheel in clean venv and import
+      - name: Build wheel
+        run: pipx run build --wheel
+      - name: Install wheel in clean environment and import
         run: |
           python -m venv /tmp/smoke
           /tmp/smoke/bin/pip install dist/*.whl
-          /tmp/smoke/bin/python -c "import nlp_toolbox.tools as t; print(t.detect_language('the quick brown fox'))"
+          /tmp/smoke/bin/python -c "
+          from nlp_toolbox.languages import load_stopwords
+          from nlp_toolbox.tools import readability_score, detect_language
+          assert len(load_stopwords('Portuguese')) > 100
+          print('smoke test ok')"

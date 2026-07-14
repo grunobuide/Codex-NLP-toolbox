@@ -1,8 +1,9 @@
 # Codex NLP Toolbox
 
 [![CI](https://github.com/grunobuide/Codex-NLP-toolbox/actions/workflows/ci.yml/badge.svg)](https://github.com/grunobuide/Codex-NLP-toolbox/actions/workflows/ci.yml)
-![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)
-[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-blue)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![Checked with mypy](https://img.shields.io/badge/mypy-strict-blue)](pyproject.toml)
 ![Coverage floor](https://img.shields.io/badge/coverage%20floor-90%25-brightgreen)
 
 A reproducible, evaluation-driven NLP toolbox for **transparent linguistic baselines**.
@@ -15,8 +16,8 @@ Before reaching for a model, you need a floor to compare against and a mechanism
 
 ## Features
 
-- Pure-Python NLP building blocks: sentence splitting, tokenization, n-grams, stopword filtering, keyword extraction.
-- Descriptive statistics: lexical counts, word-length distribution, Flesch Reading Ease.
+- Pure-Python NLP building blocks: sentence splitting, tokenization, n-grams, stopword filtering (real per-language lists, spaCy 3.8/MIT), keyword extraction.
+- Descriptive statistics: lexical counts, word-length distribution, and readability formulas calibrated per language (Flesch, Fernández Huerta, Kandel–Moles, Amstad, Franchina–Vacca, Martins et al.).
 - Lexicon-based sentiment analysis with normalized polarity score.
 - Heuristic language detection (English, Spanish, French, German, Italian, Portuguese) with per-language evidence you can inspect.
 - Streamlit UI where every result is paired with a what/how/why explanation of the method.
@@ -53,7 +54,7 @@ uv run pytest
 | Category | Function | Mechanism |
 |---|---|---|
 | Descriptive stats | `analyze_text` | text-level counts and lexical metrics |
-| Descriptive stats | `readability_score` | Flesch Reading Ease via sentence/word/syllable heuristics |
+| Descriptive stats | `readability_score` | language-calibrated readability formulas (see `docs/resources.md`) |
 | Descriptive stats | `top_ngrams`, `word_length_distribution` | frequency counting |
 | Sentiment | `sentiment_analysis` | lexicon lookup, normalized polarity |
 | Information extraction | `extract_keywords` | stopword-filtered term frequency ranking |

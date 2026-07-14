@@ -102,5 +102,52 @@ class TestNlpTools(unittest.TestCase):
         self.assertEqual(_estimate_syllables("rhythm"), 1)
 
 
+class TestReadabilityFormulas(unittest.TestCase):
+    """Pin the language-specific coefficients (regression guard)."""
+
+    def setUp(self):
+        # 1 sentence, 2 words, 5 syllables total: casa=2, bonita=3
+        self.text = "Casa bonita."
+        self.tokens = ["casa", "bonita"]
+        self.sentences = ["Casa bonita."]
+        self.wps = 2.0
+        self.spw = 2.5
+
+    def check(self, language, base, wps_c, spw_c):
+        expected = round(base - wps_c * self.wps - spw_c * self.spw, 2)
+        got = readability_score(self.text, self.tokens, self.sentences, language)
+        self.assertAlmostEqual(got, expected, places=2)
+
+    def test_spanish_fernandez_huerta(self):
+        self.check("Spanish", 206.84, 1.02, 60.0)
+
+    def test_french_kandel_moles(self):
+        self.check("French", 207.0, 1.015, 73.6)
+
+    def test_german_amstad(self):
+        self.check("German", 180.0, 1.0, 58.5)
+
+    def test_italian_franchina_vacca(self):
+        self.check("Italian", 217.0, 1.3, 60.0)
+
+    def test_portuguese_martins(self):
+        self.check("Portuguese", 248.835, 1.015, 84.6)
+
+    def test_unknown_language_falls_back_to_flesch(self):
+        flesch = readability_score(self.text, self.tokens, self.sentences, "English")
+        fallback = readability_score(self.text, self.tokens, self.sentences, "Klingon")
+        self.assertEqual(fallback, flesch)
+
+    def test_accented_vowels_counted(self):
+        self.assertEqual(_estimate_syllables("café", "French"), 2)
+        self.assertEqual(_estimate_syllables("perché", "Italian"), 2)
+        self.assertEqual(_estimate_syllables("não", "Portuguese"), 1)
+        self.assertEqual(_estimate_syllables("über", "German"), 2)
+
+    def test_silent_e_only_in_english(self):
+        self.assertEqual(_estimate_syllables("cake", "English"), 1)
+        self.assertEqual(_estimate_syllables("cake", "German"), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

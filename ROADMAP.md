@@ -10,16 +10,16 @@ Guiding principle: the NLP methods are intentionally simple; the value is the en
 
 MIT license, `pyproject.toml` + `uv.lock`, Python 3.10–3.13, runtime/dev dependency split, README repositioned with explicit non-goals.
 
-## Phase 1 — Quality gates (~1 week)
+## Phase 1 — Quality gates ✅ (pending first green run on GitHub)
 
 Make every claim in the repo mechanically verified.
 
-- [ ] Ruff (lint + format), mypy on `nlp_toolbox/`, pytest with coverage floor.
-- [ ] Pre-commit hooks mirroring CI.
-- [ ] GitHub Actions: matrix on Python 3.10–3.13 — lint, type-check, tests, package build, and a clean-venv install smoke test (`pip install . && python -c "import nlp_toolbox"`).
-- [ ] `.gitattributes` for consistent line endings.
-- [ ] Badges in README: CI status, coverage, Python versions, license.
-- [ ] Housekeeping: move the Gutenberg sample text to `data/samples/` with provenance and license note.
+- [x] Ruff (lint + format), mypy on `nlp_toolbox/`, pytest with coverage floor.
+- [x] Pre-commit hooks mirroring CI.
+- [x] GitHub Actions: matrix on Python 3.10–3.13 — lint, type-check, tests, package build, and a clean-venv install smoke test (`pip install . && python -c "import nlp_toolbox"`).
+- [x] `.gitattributes` for consistent line endings.
+- [x] Badges in README: CI status, coverage, Python versions, license.
+- [x] Housekeeping: move the Gutenberg sample text to `data/samples/` with provenance and license note.
 
 **Visible outcome:** green CI badge; every PR gated by reproducible checks.
 

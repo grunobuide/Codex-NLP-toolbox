@@ -1,3 +1,11 @@
+"""Language configuration: supported languages, stopwords, and detection hints.
+
+Stopword lists are adapted from spaCy 3.8 (MIT license); see ``docs/resources.md``
+for provenance, sizes, and known limitations of each list.
+"""
+
+from functools import cache
+from importlib import resources
 from typing import TypedDict
 
 
@@ -11,107 +19,19 @@ class LanguageConfig(TypedDict):
 
 LANGUAGE_OPTIONS = ["English", "Spanish", "French", "German", "Italian", "Portuguese"]
 
-STOPWORDS = {
-    "English": {
-        "the",
-        "and",
-        "is",
-        "in",
-        "to",
-        "of",
-        "a",
-        "for",
-        "on",
-        "with",
-        "as",
-        "that",
-        "this",
-        "it",
-        "by",
-    },
-    "Spanish": {
-        "el",
-        "la",
-        "los",
-        "las",
-        "y",
-        "o",
-        "en",
-        "de",
-        "que",
-        "por",
-        "para",
-        "con",
-        "es",
-        "un",
-        "una",
-    },
-    "French": {
-        "le",
-        "la",
-        "les",
-        "et",
-        "ou",
-        "en",
-        "de",
-        "que",
-        "pour",
-        "avec",
-        "est",
-        "un",
-        "une",
-        "des",
-    },
-    "German": {
-        "der",
-        "die",
-        "das",
-        "und",
-        "oder",
-        "in",
-        "von",
-        "zu",
-        "mit",
-        "ist",
-        "ein",
-        "eine",
-        "den",
-        "dem",
-    },
-    "Italian": {
-        "il",
-        "la",
-        "i",
-        "gli",
-        "le",
-        "e",
-        "o",
-        "in",
-        "di",
-        "per",
-        "con",
-        "è",
-        "un",
-        "una",
-    },
-    "Portuguese": {
-        "o",
-        "a",
-        "os",
-        "as",
-        "e",
-        "ou",
-        "em",
-        "de",
-        "que",
-        "para",
-        "com",
-        "é",
-        "um",
-        "uma",
-    },
+_LANGUAGE_CODES = {
+    "English": "en",
+    "Spanish": "es",
+    "French": "fr",
+    "German": "de",
+    "Italian": "it",
+    "Portuguese": "pt",
 }
 
+# Small, high-frequency function words used by the transparent hint-word
+# language detector (see ``tools.detect_language``). Deliberately tiny so the
+# evidence table stays human-readable; a character n-gram detector is planned
+# as a stronger interpretable alternative (CONTENT_ROADMAP Track 1).
 LANGUAGE_HINTS = {
     "English": {"the", "and", "is", "of", "to", "with", "that"},
     "Spanish": {"el", "la", "que", "y", "de", "para"},
@@ -122,9 +42,29 @@ LANGUAGE_HINTS = {
 }
 
 
+@cache
+def load_stopwords(language_name: str) -> frozenset[str]:
+    """Load the stopword list for ``language_name`` from packaged resources.
+
+    Returns an empty set for unsupported languages rather than raising, so
+    callers can treat "no stopwords available" as a degraded-but-valid state.
+    """
+    code = _LANGUAGE_CODES.get(language_name)
+    if code is None:
+        return frozenset()
+    ref = resources.files("nlp_toolbox.resources.stopwords").joinpath(f"{code}.txt")
+    text = ref.read_text(encoding="utf-8")
+    return frozenset(line.strip() for line in text.splitlines() if line.strip())
+
+
 def get_language_config(language_name: str) -> LanguageConfig:
+    """Return the stopwords and detection hints for ``language_name``.
+
+    Unsupported names yield a config with empty word sets (never ``None``),
+    keeping downstream tools total functions over their inputs.
+    """
     return {
         "name": language_name,
-        "stopwords": STOPWORDS.get(language_name, set()),
-        "hints": LANGUAGE_HINTS.get(language_name, set()),
+        "stopwords": set(load_stopwords(language_name)),
+        "hints": set(LANGUAGE_HINTS.get(language_name, set())),
     }

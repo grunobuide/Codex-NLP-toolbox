@@ -2,6 +2,7 @@ import streamlit as st
 
 from nlp_toolbox.languages import LANGUAGE_OPTIONS, get_language_config
 from nlp_toolbox.tools import (
+    READABILITY_FORMULAS,
     analyze_text,
     detect_language,
     extract_keywords,
@@ -69,8 +70,12 @@ TOOL_EXPLANATIONS = {
     },
     "readability_score": {
         "theme": "Descriptive statistics",
-        "what": "Flesch Reading Ease estimate.",
-        "how": "Uses words per sentence and estimated syllables per word in the Flesch formula.",
+        "what": "Readability estimate using a formula calibrated for the detected language.",
+        "how": (
+            "Words per sentence and estimated syllables per word, weighted by "
+            "language-specific coefficients (Flesch EN, Fernández Huerta ES, "
+            "Kandel–Moles FR, Amstad DE, Franchina–Vacca IT, Martins et al. PT)."
+        ),
         "why": "Provides a rough complexity signal for educational and editorial use.",
         "explore": "Compare Flesch with SMOG and Dale-Chall on the same corpus.",
     },
@@ -235,8 +240,10 @@ if text_content.strip():
 
         if show_readability:
             st.markdown("### Readability")
-            score = readability_score(text_content, tokens, sentences)
-            st.metric("Flesch Reading Ease", score)
+            score = readability_score(text_content, tokens, sentences, detected_language)
+            formula = READABILITY_FORMULAS.get(detected_language, READABILITY_FORMULAS["English"])
+            st.metric(formula.name, score)
+            st.caption(f"Language-calibrated formula. Reference: {formula.reference}")
             render_tool_explanation("readability_score")
 
         if show_top_ngrams:

@@ -1,10 +1,20 @@
+"""Core NLP baselines: counting, regex, and lexicon methods.
+
+Every function is a transparent baseline — its output can be reproduced by
+hand. See ``docs/handbook/`` (planned) for worked examples and
+``docs/resources.md`` for lexicon provenance.
+"""
+
 import re
 from collections import Counter
+from typing import NamedTuple
 
 from nlp_toolbox.languages import LANGUAGE_OPTIONS, LanguageConfig, get_language_config
 
 WORD_PATTERN = re.compile(r"[\w']+", re.UNICODE)
 SENTENCE_PATTERN = re.compile(r"(?<=[.!?])\s+")
+
+# Hand-curated English seed lexicons. Placeholder status — see docs/resources.md.
 POSITIVE_WORDS = {
     "good",
     "great",
@@ -39,8 +49,80 @@ NEGATIVE_WORDS = {
     "dark",
 }
 
+_VOWELS = "aeiouyáéíóúàèìòùâêîôûäëïöüãõœæ"
 
-def analyze_text(text: str, tokens: list[str], sentences: list[str]) -> dict[str, float]:
+
+class ReadabilityFormula(NamedTuple):
+    """Coefficients and citation for a language-specific readability formula.
+
+    All supported formulas share the shape::
+
+        score = base - wps_coefficient * words_per_sentence
+                     - spw_coefficient * syllables_per_word
+    """
+
+    name: str
+    base: float
+    wps_coefficient: float
+    spw_coefficient: float
+    reference: str
+
+
+READABILITY_FORMULAS: dict[str, ReadabilityFormula] = {
+    "English": ReadabilityFormula(
+        "Flesch Reading Ease",
+        206.835,
+        1.015,
+        84.6,
+        "Flesch, R. (1948). A new readability yardstick. J. Applied Psychology, 32(3).",
+    ),
+    "Spanish": ReadabilityFormula(
+        "Fernández Huerta",
+        206.84,
+        1.02,
+        60.0,
+        "Fernández Huerta, J. (1959). Medidas sencillas de lecturabilidad. Consigna, 214.",
+    ),
+    "French": ReadabilityFormula(
+        "Kandel–Moles",
+        207.0,
+        1.015,
+        73.6,
+        "Kandel, L., & Moles, A. (1958). Application de l'indice de Flesch à la langue "
+        "française. Cahiers Études de Radio-Télévision, 19.",
+    ),
+    "German": ReadabilityFormula(
+        "Amstad",
+        180.0,
+        1.0,
+        58.5,
+        "Amstad, T. (1978). Wie verständlich sind unsere Zeitungen? University of Zurich.",
+    ),
+    "Italian": ReadabilityFormula(
+        "Franchina–Vacca",
+        217.0,
+        1.3,
+        60.0,
+        "Franchina, V., & Vacca, R. (1986). Adaptation of Flesch readability index "
+        "on a bilingual text. Linguaggi, 3.",
+    ),
+    "Portuguese": ReadabilityFormula(
+        "Flesch adaptado (Martins et al.)",
+        248.835,
+        1.015,
+        84.6,
+        "Martins, T. B. F., et al. (1996). Readability formulas applied to textbooks "
+        "in Brazilian Portuguese (ICMC-USP Technical Report 28).",
+    ),
+}
+
+
+def analyze_text(text: str, tokens: list[str], sentences: list[str]) -> dict[str, float | int]:
+    """Compute count-based summary statistics for ``text``.
+
+    Averages are guarded against empty inputs (denominator floored at 1), so
+    empty text yields zeros rather than errors.
+    """
     average_word_length = round(sum(len(token) for token in tokens) / max(len(tokens), 1), 2)
     average_sentence_length = round(len(tokens) / max(len(sentences), 1), 2)
     unique_words = len(set(tokens))
@@ -59,6 +141,12 @@ def analyze_text(text: str, tokens: list[str], sentences: list[str]) -> dict[str
 
 
 def split_sentences(text: str) -> list[str]:
+    """Split ``text`` into sentences on whitespace after ``.``, ``!`` or ``?``.
+
+    A deliberately simple rule: it over-splits on abbreviations ("Dr. Smith")
+    and under-splits when punctuation is missing. Whitespace-only input
+    returns an empty list.
+    """
     text = text.strip()
     if not text:
         return []
@@ -67,6 +155,7 @@ def split_sentences(text: str) -> list[str]:
 
 
 def tokenize_text(text: str, config: LanguageConfig, lowercase: bool = True) -> list[str]:
+    """Extract word-like tokens (Unicode word characters and apostrophes)."""
     tokens = [match.group(0) for match in WORD_PATTERN.finditer(text)]
     if lowercase:
         tokens = [token.lower() for token in tokens]
@@ -79,11 +168,17 @@ def filter_tokens(
     remove_stopwords: bool = True,
     min_length: int = 1,
 ) -> list[str]:
+    """Drop stopwords (per ``config``) and tokens shorter than ``min_length``.
+
+    Matching is exact and case-sensitive: lowercase the tokens first
+    (``tokenize_text`` does this by default).
+    """
     stopwords = config["stopwords"] if remove_stopwords else set()
     return [token for token in tokens if token not in stopwords and len(token) >= min_length]
 
 
 def generate_ngrams(tokens: list[str], n: int) -> list[str]:
+    """Return contiguous ``n``-token windows joined by single spaces."""
     if n <= 1:
         return tokens
     return [" ".join(tokens[i : i + n]) for i in range(len(tokens) - n + 1)]
@@ -92,28 +187,54 @@ def generate_ngrams(tokens: list[str], n: int) -> list[str]:
 def extract_keywords(
     tokens: list[str], config: LanguageConfig, top_k: int = 10
 ) -> list[dict[str, str | int]]:
+    """Rank non-stopword tokens by raw frequency (top ``top_k``)."""
     filtered = filter_tokens(tokens, config, remove_stopwords=True, min_length=1)
     frequencies = Counter(filtered).most_common(top_k)
     return [{"term": term, "count": count} for term, count in frequencies]
 
 
 def top_ngrams(tokens: list[str], n: int, top_k: int = 10) -> list[dict[str, str | int]]:
+    """Rank ``n``-grams by frequency (top ``top_k``)."""
     ngrams = generate_ngrams(tokens, n)
     frequencies = Counter(ngrams).most_common(top_k)
     return [{"ngram": term, "count": count} for term, count in frequencies]
 
 
-def readability_score(text: str, tokens: list[str], sentences: list[str]) -> float:
+def readability_score(
+    text: str,
+    tokens: list[str],
+    sentences: list[str],
+    language: str = "English",
+) -> float:
+    """Language-calibrated readability score (higher = easier).
+
+    Applies the formula registered for ``language`` in
+    ``READABILITY_FORMULAS`` (Flesch for English, Fernández Huerta for
+    Spanish, Kandel–Moles for French, Amstad for German, Franchina–Vacca for
+    Italian, Martins et al. for Portuguese). Unknown languages fall back to
+    the English Flesch formula. Scores are only comparable within one
+    language. Returns 0.0 for empty input.
+    """
     if not tokens or not sentences:
         return 0.0
-    syllables = sum(_estimate_syllables(token) for token in tokens)
+    formula = READABILITY_FORMULAS.get(language, READABILITY_FORMULAS["English"])
+    syllables = sum(_estimate_syllables(token, language) for token in tokens)
     words_per_sentence = len(tokens) / max(len(sentences), 1)
     syllables_per_word = syllables / max(len(tokens), 1)
-    score = 206.835 - 1.015 * words_per_sentence - 84.6 * syllables_per_word
+    score = (
+        formula.base
+        - formula.wps_coefficient * words_per_sentence
+        - formula.spw_coefficient * syllables_per_word
+    )
     return round(score, 2)
 
 
 def sentiment_analysis(tokens: list[str]) -> dict[str, float]:
+    """Count positive/negative lexicon hits; score = (pos − neg) / tokens.
+
+    English-only seed lexicons (see ``docs/resources.md``); on other
+    languages this measures English loanwords, not sentiment.
+    """
     positive = sum(1 for token in tokens if token in POSITIVE_WORDS)
     negative = sum(1 for token in tokens if token in NEGATIVE_WORDS)
     total = max(len(tokens), 1)
@@ -126,42 +247,55 @@ def sentiment_analysis(tokens: list[str]) -> dict[str, float]:
 
 
 def word_length_distribution(tokens: list[str]) -> dict[int, int]:
+    """Histogram of token lengths (characters), sorted by length."""
     lengths = Counter(len(token) for token in tokens)
     return dict(sorted(lengths.items(), key=lambda item: item[0]))
 
 
 def language_hint_hits(tokens: list[str]) -> dict[str, int]:
+    """Count, per language, how many tokens appear in its hint-word set."""
     scores = {}
     for language in LANGUAGE_OPTIONS:
         config = get_language_config(language)
-        hints = config.get("hints", set())
+        hints = config["hints"]
         scores[language] = sum(1 for token in tokens if token in hints)
     return scores
 
 
 def detect_language(text: str) -> str:
+    """Pick the language whose hint words appear most often in ``text``.
+
+    Known bias: ties and zero evidence fall back to English. This is
+    documented, deliberate behavior for the baseline; use
+    ``language_hint_hits`` to inspect the evidence directly.
+    """
     tokens = tokenize_text(text, get_language_config("English"))
     if not tokens:
         return "English"
 
     scores = language_hint_hits(tokens)
 
-    best_language = max(scores, key=lambda language: scores[language])
+    best_language = max(scores, key=lambda lang: scores[lang])
     if scores[best_language] == 0:
         return "English"
     return best_language
 
 
-def _estimate_syllables(word: str) -> int:
+def _estimate_syllables(word: str, language: str = "English") -> int:
+    """Estimate syllables by counting vowel groups (accented vowels included).
+
+    The silent final ``e`` adjustment applies to English only. This is a
+    heuristic: expect off-by-one errors on diphthongs, hiatus, and loanwords.
+    Minimum result is 1.
+    """
     word = word.lower()
-    vowels = "aeiouy"
     count = 0
     prev_is_vowel = False
     for char in word:
-        is_vowel = char in vowels
+        is_vowel = char in _VOWELS
         if is_vowel and not prev_is_vowel:
             count += 1
         prev_is_vowel = is_vowel
-    if word.endswith("e") and count > 1:
+    if language == "English" and word.endswith("e") and count > 1:
         count -= 1
     return max(count, 1)
