@@ -23,14 +23,14 @@ Make every claim in the repo mechanically verified.
 
 **Visible outcome:** green CI badge; every PR gated by reproducible checks.
 
-## Phase 2 — Library hardening + CLI (~1 week)
+## Phase 2 — Library hardening + CLI ✅
 
 Make the toolbox usable outside the browser.
 
-- [ ] API cleanup: remove unused parameters (e.g. `config` in `tokenize_text`), add docstrings with documented behavior for empty/edge inputs, type-complete public API.
-- [ ] Make silent biases explicit: `detect_language` tie-breaking and English fallback become documented, testable behavior (e.g. return confidence/evidence, not just a label).
-- [ ] CLI: `codex-nlp analyze <file> [--lang auto] [--json]` exposing the tool catalog with structured JSON output — usable in pipelines and scriptable for the eval harness.
-- [ ] Entry point declared in `pyproject.toml`; CLI covered by tests.
+- [x] API cleanup: remove unused parameters (e.g. `config` in `tokenize_text`), add docstrings with documented behavior for empty/edge inputs, type-complete public API.
+- [x] Make silent biases explicit: `detect_language` tie-breaking and English fallback become documented, testable behavior (e.g. return confidence/evidence, not just a label).
+- [x] CLI: `codex-nlp analyze <file> [--lang auto] [--json]` exposing the tool catalog with structured JSON output — usable in pipelines and scriptable for the eval harness.
+- [x] Entry point declared in `pyproject.toml`; CLI covered by tests.
 
 **Visible outcome:** a reviewer can `uv run codex-nlp analyze data/samples/... --json` ten seconds after cloning.
 

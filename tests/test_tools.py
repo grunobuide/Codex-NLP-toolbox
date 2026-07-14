@@ -5,16 +5,21 @@ from nlp_toolbox.tools import (
     _estimate_syllables,
     analyze_text,
     detect_language,
+    detect_language_details,
     extract_keywords,
     filter_tokens,
     generate_ngrams,
+    kwic,
     language_hint_hits,
     readability_score,
     sentiment_analysis,
     split_sentences,
+    tfidf_keywords,
     tokenize_text,
     top_ngrams,
+    vocabulary_growth,
     word_length_distribution,
+    zipf_table,
 )
 
 
@@ -29,8 +34,8 @@ class TestNlpTools(unittest.TestCase):
 
     def test_tokenize_text_lowercase_toggle(self):
         text = "Hello NLP"
-        self.assertEqual(tokenize_text(text, self.english), ["hello", "nlp"])
-        self.assertEqual(tokenize_text(text, self.english, lowercase=False), ["Hello", "NLP"])
+        self.assertEqual(tokenize_text(text), ["hello", "nlp"])
+        self.assertEqual(tokenize_text(text, lowercase=False), ["Hello", "NLP"])
 
     def test_filter_tokens(self):
         tokens = ["the", "quick", "fox", "jumps"]
@@ -147,6 +152,85 @@ class TestReadabilityFormulas(unittest.TestCase):
     def test_silent_e_only_in_english(self):
         self.assertEqual(_estimate_syllables("cake", "English"), 1)
         self.assertEqual(_estimate_syllables("cake", "German"), 2)
+
+
+class TestTrack2Methods(unittest.TestCase):
+    """Hand-computable examples for TF-IDF, KWIC, Zipf, and vocabulary growth."""
+
+    def test_tfidf_hand_example(self):
+        # tf: cat=2, sat=1, mat=1; df: cat=2, sat=1, mat=1; N=2
+        # idf(cat)=log10(1)=0; idf(sat)=idf(mat)=log10(2)=0.30103
+        result = tfidf_keywords([["cat", "sat"], ["cat", "mat"]])
+        self.assertEqual(
+            result,
+            [
+                {"term": "mat", "score": 0.301},
+                {"term": "sat", "score": 0.301},
+                {"term": "cat", "score": 0.0},
+            ],
+        )
+
+    def test_tfidf_single_document_all_zero(self):
+        result = tfidf_keywords([["cat", "sat", "cat"]])
+        self.assertTrue(all(row["score"] == 0.0 for row in result))
+
+    def test_tfidf_empty(self):
+        self.assertEqual(tfidf_keywords([]), [])
+
+    def test_kwic_window_and_case(self):
+        tokens = ["a", "b", "KEY", "c", "d", "key"]
+        result = kwic(tokens, "key", window=1)
+        self.assertEqual(
+            result,
+            [
+                {"left": "b", "keyword": "KEY", "right": "c"},
+                {"left": "d", "keyword": "key", "right": ""},
+            ],
+        )
+
+    def test_kwic_max_matches(self):
+        tokens = ["key"] * 5
+        self.assertEqual(len(kwic(tokens, "key", max_matches=3)), 3)
+
+    def test_zipf_table_ranks_and_ties(self):
+        result = zipf_table(["b", "a", "a", "c"], top_k=3)
+        self.assertEqual(result[0], {"rank": 1, "term": "a", "count": 2})
+        # tie between b and c broken alphabetically
+        self.assertEqual(result[1], {"rank": 2, "term": "b", "count": 1})
+        self.assertEqual(result[2], {"rank": 3, "term": "c", "count": 1})
+
+    def test_vocabulary_growth_points(self):
+        result = vocabulary_growth(["a", "b", "a", "c"], step=2)
+        self.assertEqual(
+            result,
+            [
+                {"tokens_seen": 2, "vocabulary_size": 2},
+                {"tokens_seen": 4, "vocabulary_size": 3},
+            ],
+        )
+
+    def test_vocabulary_growth_empty(self):
+        self.assertEqual(vocabulary_growth([], step=2), [])
+
+
+class TestDetectLanguageDetails(unittest.TestCase):
+    def test_evidence_and_no_fallback(self):
+        details = detect_language_details("el la que y de para")
+        self.assertEqual(details.language, "Spanish")
+        self.assertFalse(details.fallback)
+        self.assertGreater(details.scores["Spanish"], 0)
+
+    def test_zero_evidence_falls_back_to_english(self):
+        details = detect_language_details("12345 xyzzy")
+        self.assertEqual(details.language, "English")
+        self.assertTrue(details.fallback)
+
+    def test_tie_is_reported(self):
+        # "que de" scores 2 for Spanish, French and Portuguese alike
+        details = detect_language_details("que de")
+        self.assertEqual(details.scores["Spanish"], details.scores["Portuguese"])
+        self.assertIn("Portuguese", details.tied_with)
+        self.assertFalse(details.fallback)
 
 
 if __name__ == "__main__":

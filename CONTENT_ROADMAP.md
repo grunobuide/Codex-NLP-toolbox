@@ -19,10 +19,10 @@ The current lexicons are placeholders (~15 stopwords per language, 30 English-on
 
 New tools, chosen because they appear in every intro NLP syllabus and stay hand-inspectable:
 
-- [ ] **TF-IDF keyword extraction** — presented side by side with raw frequency so students see *why* IDF matters.
+- [x] **TF-IDF keyword extraction** — presented side by side with raw frequency so students see *why* IDF matters.
 - [ ] **Collocations** via PMI and log-likelihood ratio.
-- [ ] **KWIC concordance** (keyword in context) — the classic corpus-linguistics view.
-- [ ] **Zipf's law plot** (rank–frequency) and **vocabulary growth curve** — highly visual, one-slide teachable.
+- [x] **KWIC concordance** (keyword in context) — the classic corpus-linguistics view.
+- [x] **Zipf's law plot** (rank–frequency) and **vocabulary growth curve** — highly visual, one-slide teachable.
 - [ ] **Porter stemmer** (English) as a worked example of rule-based normalization, with documented failure cases.
 - [ ] **Text comparison mode**: load two texts side by side — two authors, two translations, two registers — and compare every metric. This is the killer classroom feature.
 

@@ -1,20 +1,26 @@
+import math
+
 import streamlit as st
 
 from nlp_toolbox.languages import LANGUAGE_OPTIONS, get_language_config
 from nlp_toolbox.tools import (
     READABILITY_FORMULAS,
     analyze_text,
-    detect_language,
+    detect_language_details,
     extract_keywords,
     filter_tokens,
     generate_ngrams,
+    kwic,
     language_hint_hits,
     readability_score,
     sentiment_analysis,
     split_sentences,
+    tfidf_keywords,
     tokenize_text,
     top_ngrams,
+    vocabulary_growth,
     word_length_distribution,
+    zipf_table,
 )
 
 st.set_page_config(page_title="Codex NLP Toolbox", layout="wide")
@@ -107,6 +113,51 @@ TOOL_EXPLANATIONS = {
         "why": "Explains why auto-detection favored one language over another.",
         "explore": "Add confusion tests for mixed-language and code-switched inputs.",
     },
+    "tfidf_keywords": {
+        "theme": "Information extraction",
+        "what": "TF-IDF keyword ranking, using sentences as documents.",
+        "how": (
+            "score(t) = tf(t) x log10(N/df(t)): total frequency weighted down "
+            "when a term appears in many sentences."
+        ),
+        "why": (
+            "Shows why plain frequency overrates ubiquitous words - "
+            "the classic step beyond counting."
+        ),
+        "explore": "Compare freq vs TF-IDF rankings side by side; then try BM25 and KeyBERT.",
+    },
+    "kwic": {
+        "theme": "Text structure",
+        "what": "Keyword-in-context concordance (KWIC).",
+        "how": (
+            "Finds case-insensitive whole-token matches and shows a window of surrounding tokens."
+        ),
+        "why": (
+            "The classic corpus-linguistics view: see how a word is actually used "
+            "before trusting any statistic about it."
+        ),
+        "explore": "Compare contexts of near-synonyms, or the same word across two texts.",
+    },
+    "zipf_table": {
+        "theme": "Descriptive statistics",
+        "what": "Rank-frequency table and plot (Zipf's law).",
+        "how": (
+            "Sorts tokens by frequency; rank 1 = most frequent. Natural text gives "
+            "a straight line in log-log scale (slope near -1)."
+        ),
+        "why": (
+            "One of the most robust empirical laws of language - "
+            "and a two-minute sanity check of any corpus."
+        ),
+        "explore": "Compare the slope across languages and against shuffled or synthetic text.",
+    },
+    "vocabulary_growth": {
+        "theme": "Descriptive statistics",
+        "what": "Vocabulary size as the text is read (type-token growth).",
+        "how": "Counts distinct tokens after every N tokens seen.",
+        "why": "Flattening growth (Heaps' law) reveals lexical richness and text homogeneity.",
+        "explore": "Compare authors or translations of the same work.",
+    },
     "filter_tokens": {
         "theme": "Text structure",
         "what": "Token cleaning and pruning.",
@@ -195,6 +246,10 @@ with st.sidebar:
     show_readability = st.checkbox("Readability", value=True)
     show_sentiment = st.checkbox("Sentiment snapshot", value=True)
     show_word_lengths = st.checkbox("Word length distribution", value=True)
+    show_zipf = st.checkbox("Zipf rank-frequency", value=False)
+    show_vocab_growth = st.checkbox("Vocabulary growth", value=False)
+    show_tfidf = st.checkbox("TF-IDF keywords", value=True)
+    show_kwic = st.checkbox("KWIC concordance", value=False)
     show_language_hints = st.checkbox("Language hint matches", value=False)
 
 text_content = ""
@@ -204,18 +259,20 @@ else:
     text_content = text_input
 
 if text_content.strip():
-    if language_choice == "Auto":
-        detected_language = detect_language(text_content)
-    else:
-        detected_language = language_choice
+    detection = detect_language_details(text_content)
+    detected_language = detection.language if language_choice == "Auto" else language_choice
 
     config = get_language_config(detected_language)
 
     st.subheader("Detected language")
     st.write(f"**{detected_language}**")
+    if language_choice == "Auto" and detection.fallback:
+        st.caption("No hint word matched - defaulted to English (documented fallback).")
+    elif language_choice == "Auto" and detection.tied_with:
+        st.caption(f"Tie with {', '.join(detection.tied_with)} - resolved by fixed language order.")
 
     sentences = split_sentences(text_content)
-    raw_tokens = tokenize_text(text_content, config, lowercase=lowercase_tokens)
+    raw_tokens = tokenize_text(text_content, lowercase=lowercase_tokens)
     tokens = filter_tokens(
         raw_tokens, config, remove_stopwords=remove_stopwords, min_length=min_token_length
     )
@@ -260,6 +317,25 @@ if text_content.strip():
             st.bar_chart(length_distribution)
             render_tool_explanation("word_length_distribution")
 
+        if show_zipf:
+            st.markdown("### Zipf rank-frequency")
+            zipf_rows = zipf_table(tokens, top_k=100)
+            log_points = {
+                "log10(count)": [math.log10(row["count"]) for row in zipf_rows],
+            }
+            st.line_chart(log_points)
+            st.caption(
+                "x-axis: rank (log-spaced in nature; linear here). Straightish descent = Zipf."
+            )
+            st.dataframe(zipf_rows[:20])
+            render_tool_explanation("zipf_table")
+
+        if show_vocab_growth:
+            st.markdown("### Vocabulary growth")
+            growth = vocabulary_growth(tokens, step=max(50, len(tokens) // 50 or 1))
+            st.line_chart({"vocabulary size": [point["vocabulary_size"] for point in growth]})
+            render_tool_explanation("vocabulary_growth")
+
     with tabs[1]:
         if show_sentences:
             st.markdown("### Sentence splitting")
@@ -274,6 +350,20 @@ if text_content.strip():
             render_tool_explanation("tokenize_text")
             render_tool_explanation("filter_tokens")
 
+        if show_kwic:
+            st.markdown("### KWIC concordance")
+            kwic_keyword = st.text_input("Keyword", value="")
+            if kwic_keyword.strip():
+                kwic_window = st.slider("Context window (tokens)", 2, 10, 5)
+                matches = kwic(
+                    tokenize_text(text_content, lowercase=False),
+                    kwic_keyword.strip(),
+                    window=kwic_window,
+                )
+                st.caption(f"{len(matches)} match(es)")
+                st.dataframe(matches)
+            render_tool_explanation("kwic")
+
         if show_ngrams:
             st.markdown("### N-grams")
             n_value = st.slider("N", 2, 5, 2)
@@ -283,12 +373,26 @@ if text_content.strip():
             render_tool_explanation("generate_ngrams")
 
     with tabs[2]:
-        if show_keywords:
+        if show_keywords or show_tfidf:
             st.markdown("### Keywords")
             keyword_count = st.slider("Top keywords", 5, 30, 10)
-            keywords = extract_keywords(tokens, config, top_k=keyword_count)
-            st.write(keywords)
-            render_tool_explanation("extract_keywords")
+            col_freq, col_tfidf = st.columns(2)
+            if show_keywords:
+                with col_freq:
+                    st.markdown("**Frequency** (stopwords removed)")
+                    keywords = extract_keywords(tokens, config, top_k=keyword_count)
+                    st.write(keywords)
+            if show_tfidf:
+                with col_tfidf:
+                    st.markdown("**TF-IDF** (sentences as documents)")
+                    sentence_docs = [
+                        filter_tokens(tokenize_text(sentence), config) for sentence in sentences
+                    ]
+                    st.write(tfidf_keywords(sentence_docs, top_k=keyword_count))
+            if show_keywords:
+                render_tool_explanation("extract_keywords")
+            if show_tfidf:
+                render_tool_explanation("tfidf_keywords")
 
     with tabs[3]:
         if show_sentiment:

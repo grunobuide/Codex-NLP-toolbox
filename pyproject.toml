@@ -22,6 +22,9 @@ dependencies = [
     "streamlit>=1.32",
 ]
 
+[project.scripts]
+codex-nlp = "nlp_toolbox.cli:main"
+
 [project.urls]
 Repository = "https://github.com/grunobuide/Codex-NLP-toolbox"
 Issues = "https://github.com/grunobuide/Codex-NLP-toolbox/issues"

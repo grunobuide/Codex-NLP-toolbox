@@ -49,6 +49,19 @@ uv sync --group dev
 uv run pytest
 ```
 
+## Command line
+
+The same baselines, scriptable. After installing:
+
+```bash
+codex-nlp analyze data/samples/frankenstein_en.txt --json   # full profile
+codex-nlp keywords text.txt --method tfidf --top-k 15       # freq or tfidf
+codex-nlp kwic text.txt love --window 5                     # concordance
+codex-nlp zipf text.txt --top-k 50                          # rank-frequency
+```
+
+Language is auto-detected (`--lang` to override); `--json` gives stable, machine-readable output for pipelines.
+
 ## Method catalog
 
 | Category | Function | Mechanism |
@@ -58,7 +71,10 @@ uv run pytest
 | Descriptive stats | `top_ngrams`, `word_length_distribution` | frequency counting |
 | Sentiment | `sentiment_analysis` | lexicon lookup, normalized polarity |
 | Information extraction | `extract_keywords` | stopword-filtered term frequency ranking |
-| Language profile | `detect_language`, `language_hint_hits` | hint-word overlap with inspectable per-language evidence |
+| Information extraction | `tfidf_keywords` | tf x log10(N/df), sentences as documents |
+| Descriptive stats | `zipf_table`, `vocabulary_growth` | rank-frequency (Zipf) and type-token growth |
+| Text structure | `kwic` | keyword-in-context concordance |
+| Language profile | `detect_language_details`, `language_hint_hits` | hint-word overlap; ties and English fallback reported explicitly |
 | Text structure | `split_sentences`, `tokenize_text`, `filter_tokens`, `generate_ngrams` | regex segmentation and token windows |
 
 ## Non-goals

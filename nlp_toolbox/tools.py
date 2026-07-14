@@ -7,6 +7,7 @@ hand. See ``docs/handbook/`` (planned) for worked examples and
 
 import re
 from collections import Counter
+from math import log10
 from typing import NamedTuple
 
 from nlp_toolbox.languages import LANGUAGE_OPTIONS, LanguageConfig, get_language_config
@@ -154,7 +155,7 @@ def split_sentences(text: str) -> list[str]:
     return [sentence.strip() for sentence in sentences if sentence.strip()]
 
 
-def tokenize_text(text: str, config: LanguageConfig, lowercase: bool = True) -> list[str]:
+def tokenize_text(text: str, lowercase: bool = True) -> list[str]:
     """Extract word-like tokens (Unicode word characters and apostrophes)."""
     tokens = [match.group(0) for match in WORD_PATTERN.finditer(text)]
     if lowercase:
@@ -262,23 +263,131 @@ def language_hint_hits(tokens: list[str]) -> dict[str, int]:
     return scores
 
 
+class LanguageDetection(NamedTuple):
+    """Outcome of hint-word language detection, with its full evidence.
+
+    ``fallback`` is True when no hint word matched and English was returned
+    by convention. ``tied_with`` lists other languages with the same top
+    score; ties are resolved by ``LANGUAGE_OPTIONS`` order. Both conditions
+    are explicit here precisely because they are silent biases otherwise.
+    """
+
+    language: str
+    scores: dict[str, int]
+    tied_with: list[str]
+    fallback: bool
+
+
+def detect_language_details(text: str) -> LanguageDetection:
+    """Detect the language of ``text`` and return the evidence behind the pick.
+
+    Scores each supported language by counting tokens found in its hint-word
+    set (``language_hint_hits``). Zero evidence anywhere yields English with
+    ``fallback=True``.
+    """
+    tokens = tokenize_text(text)
+    scores = language_hint_hits(tokens)
+    best_language = max(scores, key=lambda lang: scores[lang])
+    best_score = scores[best_language]
+    if best_score == 0:
+        return LanguageDetection("English", scores, [], True)
+    tied_with = [
+        lang for lang, score in scores.items() if score == best_score and lang != best_language
+    ]
+    return LanguageDetection(best_language, scores, tied_with, False)
+
+
 def detect_language(text: str) -> str:
     """Pick the language whose hint words appear most often in ``text``.
 
-    Known bias: ties and zero evidence fall back to English. This is
-    documented, deliberate behavior for the baseline; use
-    ``language_hint_hits`` to inspect the evidence directly.
+    Convenience wrapper over ``detect_language_details``; use that function
+    to inspect scores, ties, and the English fallback explicitly.
     """
-    tokens = tokenize_text(text, get_language_config("English"))
-    if not tokens:
-        return "English"
+    return detect_language_details(text).language
 
-    scores = language_hint_hits(tokens)
 
-    best_language = max(scores, key=lambda lang: scores[lang])
-    if scores[best_language] == 0:
-        return "English"
-    return best_language
+def tfidf_keywords(documents: list[list[str]], top_k: int = 10) -> list[dict[str, str | float]]:
+    """Rank terms by TF-IDF across ``documents`` (each a token list).
+
+    For term ``t``: ``tfidf(t) = tf(t) * log10(N / df(t))`` where ``tf`` is
+    the total count over all documents, ``N`` the number of documents, and
+    ``df`` the number of documents containing ``t``. With a single document
+    every idf is ``log10(1) = 0``, so all scores are 0 — the instructive
+    degenerate case. In the app, sentences act as documents. Ties are broken
+    alphabetically for deterministic output.
+    """
+    n_docs = len(documents)
+    if n_docs == 0:
+        return []
+    term_frequency: Counter[str] = Counter()
+    document_frequency: Counter[str] = Counter()
+    for document in documents:
+        term_frequency.update(document)
+        document_frequency.update(set(document))
+    scored = [
+        (term, round(count * log10(n_docs / document_frequency[term]), 4))
+        for term, count in term_frequency.items()
+    ]
+    scored.sort(key=lambda item: (-item[1], item[0]))
+    return [{"term": term, "score": score} for term, score in scored[:top_k]]
+
+
+def kwic(
+    tokens: list[str], keyword: str, window: int = 5, max_matches: int = 50
+) -> list[dict[str, str]]:
+    """Keyword-in-context concordance: every match with ``window`` tokens around it.
+
+    Matching is case-insensitive on whole tokens. Returns at most
+    ``max_matches`` rows of ``{"left", "keyword", "right"}`` with the context
+    joined by single spaces.
+    """
+    target = keyword.lower()
+    matches = []
+    for index, token in enumerate(tokens):
+        if token.lower() == target:
+            matches.append(
+                {
+                    "left": " ".join(tokens[max(0, index - window) : index]),
+                    "keyword": token,
+                    "right": " ".join(tokens[index + 1 : index + 1 + window]),
+                }
+            )
+            if len(matches) >= max_matches:
+                break
+    return matches
+
+
+def zipf_table(tokens: list[str], top_k: int = 50) -> list[dict[str, str | int]]:
+    """Rank-frequency table (Zipf's law view): rank 1 = most frequent token.
+
+    Ties are broken alphabetically so ranks are deterministic. Plot
+    ``log(rank)`` against ``log(count)``: natural text approximates a
+    straight line of slope −1 (Zipf 1949).
+    """
+    counts = Counter(tokens)
+    ordered = sorted(counts.items(), key=lambda item: (-item[1], item[0]))[:top_k]
+    return [
+        {"rank": rank, "term": term, "count": count}
+        for rank, (term, count) in enumerate(ordered, start=1)
+    ]
+
+
+def vocabulary_growth(tokens: list[str], step: int = 100) -> list[dict[str, int]]:
+    """Vocabulary size after every ``step`` tokens (type–token growth curve).
+
+    Includes a final point at the full token count. Sub-linear growth is
+    expected (Heaps' law); a flattening curve means fewer new word types per
+    token read.
+    """
+    points = []
+    seen: set[str] = set()
+    for index, token in enumerate(tokens, start=1):
+        seen.add(token)
+        if index % step == 0:
+            points.append({"tokens_seen": index, "vocabulary_size": len(seen)})
+    if tokens and (not points or points[-1]["tokens_seen"] != len(tokens)):
+        points.append({"tokens_seen": len(tokens), "vocabulary_size": len(seen)})
+    return points
 
 
 def _estimate_syllables(word: str, language: str = "English") -> int:
