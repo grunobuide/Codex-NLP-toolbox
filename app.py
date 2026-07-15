@@ -389,6 +389,17 @@ else:
         sample_names = list(SAMPLES)
         sample_choice = st.selectbox("Or load a sample text", ["None", *sample_names])
         language_choice = st.selectbox("Language", options=["Auto"] + LANGUAGE_OPTIONS, index=0)
+        auto_detector = st.selectbox(
+            "Auto detector",
+            options=["Character n-grams (recommended)", "Hint words (baseline)"],
+            index=0,
+            help=(
+                "Which detector drives analysis in Auto mode (stopwords, readability, "
+                "sentiment, language config). Char n-grams scored 98.9% vs 75.6% for hint "
+                "words on the language-ID benchmark. Hint words stay available as a "
+                "transparent, inspectable baseline."
+            ),
+        )
         st.header("Customizations")
         lowercase_tokens = st.checkbox("Lowercase tokens", value=True)
         remove_stopwords = st.checkbox("Remove stopwords", value=True)
@@ -422,20 +433,39 @@ else:
 
     if text_content.strip():
         detection = detect_language_details(text_content)
-        detected_language = detection.language if language_choice == "Auto" else language_choice
+        ngram_detection = detect_language_ngram_details(text_content)
+        use_ngram = auto_detector.startswith("Character")
+
+        if language_choice != "Auto":
+            detected_language = language_choice
+            detector_used = "manual"
+        elif use_ngram:
+            detected_language = ngram_detection.language
+            detector_used = "char_ngrams"
+        else:
+            detected_language = detection.language
+            detector_used = "hint_words"
 
         config = get_language_config(detected_language)
 
         st.subheader("Detected language")
         st.write(f"**{detected_language}**")
-        ngram_detection = detect_language_ngram_details(text_content)
-        st.caption(f"Char n-gram detector (Cavnar-Trenkle) says: **{ngram_detection.language}**")
-        if language_choice == "Auto" and detection.fallback:
-            st.caption("No hint word matched - defaulted to English (documented fallback).")
-        elif language_choice == "Auto" and detection.tied_with:
-            st.caption(
-                f"Tie with {', '.join(detection.tied_with)} - resolved by fixed language order."
-            )
+        if language_choice == "Auto":
+            active = "char n-grams (Cavnar-Trenkle)" if use_ngram else "hint words"
+            st.caption(f"Active detector: **{active}** — drives every language-dependent method.")
+            if use_ngram:
+                st.caption(f"For comparison, hint words say: **{detection.language}**")
+                if ngram_detection.fallback:
+                    st.caption("No letters found - defaulted to English (documented fallback).")
+            else:
+                st.caption(f"For comparison, char n-grams say: **{ngram_detection.language}**")
+                if detection.fallback:
+                    st.caption("No hint word matched - defaulted to English (documented fallback).")
+                elif detection.tied_with:
+                    st.caption(
+                        f"Tie with {', '.join(detection.tied_with)} - "
+                        "resolved by fixed language order."
+                    )
 
         sentences = split_sentences(text_content)
         raw_tokens = tokenize_text(text_content, lowercase=lowercase_tokens)
@@ -577,7 +607,19 @@ else:
             if show_collocations:
                 st.markdown("### Collocations")
                 min_count = st.slider("Minimum pair frequency", 2, 10, 2)
-                st.write(collocations(tokens, min_count=min_count, top_k=15))
+                over_filtered = st.checkbox(
+                    "Collocations over filtered token sequence", value=False
+                )
+                if over_filtered:
+                    collocation_tokens = tokens
+                    st.caption(
+                        "Adjacency may differ from the original text: stopwords and short "
+                        "tokens were removed before pairing."
+                    )
+                else:
+                    collocation_tokens = tokenize_text(text_content, lowercase=lowercase_tokens)
+                    st.caption("Adjacent bigrams over the original token sequence.")
+                st.write(collocations(collocation_tokens, min_count=min_count, top_k=15))
                 render_tool_explanation("collocations")
 
         with tabs[3]:
@@ -616,6 +658,7 @@ else:
         st.divider()
         export_payload = {
             "language": detected_language,
+            "detector": detector_used,
             "stats": analyze_text(text_content, tokens, sentences),
             "readability": {
                 "formula": READABILITY_FORMULAS.get(

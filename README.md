@@ -23,7 +23,7 @@ Before reaching for a model, you need a floor to compare against and a mechanism
 - Pure-Python NLP building blocks: sentence splitting, tokenization, n-grams, stopword filtering (real per-language lists, spaCy 3.8/MIT), keyword extraction.
 - Descriptive statistics: lexical counts, word-length distribution, and readability formulas calibrated per language (Flesch, Fernández Huerta, Kandel–Moles, Amstad, Franchina–Vacca, Martins et al.).
 - Lexicon-based sentiment analysis in all six languages (hand-curated v1 lexicons, documented methodology).
-- Heuristic language detection (English, Spanish, French, German, Italian, Portuguese) with per-language evidence you can inspect.
+- Two language detectors for six languages (English, Spanish, French, German, Italian, Portuguese) with inspectable per-language evidence: character n-grams (Cavnar–Trenkle, the recommended default) and hint words (a transparent baseline).
 - Streamlit UI where every result is paired with a what/how/why explanation of the method.
 
 ## Installation
@@ -62,9 +62,11 @@ codex-nlp analyze data/samples/frankenstein_en.txt --json   # full profile
 codex-nlp keywords text.txt --method tfidf --top-k 15       # freq or tfidf
 codex-nlp kwic text.txt love --window 5                     # concordance
 codex-nlp zipf text.txt --top-k 50                          # rank-frequency
+codex-nlp collocations text.txt --min-count 3 --top-k 20    # bigrams (PMI + LLR)
+codex-nlp stem running runs ran --json                      # Porter stems (English)
 ```
 
-Language is auto-detected (`--lang` to override); `--json` gives stable, machine-readable output for pipelines.
+Language is auto-detected (`--lang` to override); `--json` gives stable, machine-readable output for pipelines. The CLI computes collocations over the original token sequence, so bigram adjacency matches the source text.
 
 ## Method catalog
 
@@ -76,9 +78,12 @@ Language is auto-detected (`--lang` to override); `--json` gives stable, machine
 | Sentiment | `sentiment_analysis` | lexicon lookup, normalized polarity |
 | Information extraction | `extract_keywords` | stopword-filtered term frequency ranking |
 | Information extraction | `tfidf_keywords` | tf x log10(N/df), sentences as documents |
+| Information extraction | `collocations` | adjacent bigrams ranked by log-likelihood ratio (Dunning 1993) with PMI |
 | Descriptive stats | `zipf_table`, `vocabulary_growth` | rank-frequency (Zipf) and type-token growth |
 | Text structure | `kwic` | keyword-in-context concordance |
+| Text structure | `porter_stem` | Porter (1980) suffix-stripping stemmer for English |
 | Language profile | `detect_language_details`, `language_hint_hits` | hint-word overlap; ties and English fallback reported explicitly |
+| Language profile | `detect_language_ngram_details` | character trigram profiles, Cavnar–Trenkle out-of-place distance (recommended default) |
 | Text structure | `split_sentences`, `tokenize_text`, `filter_tokens`, `generate_ngrams` | regex segmentation and token windows |
 
 ## Benchmarks
@@ -98,4 +103,7 @@ The transparent baselines are *expected* to lose to specialized systems — the 
 This project deliberately does **not** aim to:
 
 - Compete with production NLP libraries (spaCy, NLTK, Hugging Face) on accuracy or coverage.
-- I
+- Introduce machine-learned or statistical models: every method is rule-, lexicon-, or frequency-based so its behavior stays fully inspectable.
+- Support languages beyond the six covered (English, Spanish, French, German, Italian, Portuguese).
+- Optimize for large-scale or low-latency production workloads; the priority is clarity, not throughput.
+- Replace a linguistics or NLP course — it complements one by making baseline mechanisms transparent.
