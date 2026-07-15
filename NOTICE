@@ -1,0 +1,37 @@
+Codex NLP Toolbox — licensing notice
+=====================================
+
+This repository mixes materials under different licenses. The MIT license in
+LICENSE covers the project's own source code; it does NOT automatically extend
+to third-party or derived data assets. Each asset class is licensed as follows.
+
+1. Code — MIT
+   Everything under nlp_toolbox/ (excluding the bundled resource data files
+   noted below), app.py, scripts/, tests/, evals/ code, and documentation
+   authored for this project. See LICENSE.
+
+2. Character n-gram profiles — CC BY-SA 4.0 (derived from Wikipedia)
+   Files: nlp_toolbox/resources/ngram_profiles/{en,es,fr,de,it,pt}.txt
+   These are derivative statistical summaries (top-300 character-trigram
+   frequency rankings) of Wikipedia article text, which is licensed CC BY-SA
+   4.0. The derived profiles are redistributed under the same CC BY-SA 4.0
+   license. Source articles, URLs, method, build script, and attribution:
+   nlp_toolbox/resources/ngram_profiles/PROVENANCE.md
+   License text: https://creativecommons.org/licenses/by-sa/4.0/
+
+3. Stopword lists — MIT (adapted from spaCy)
+   Files: nlp_toolbox/resources/stopwords/*.txt
+   Adapted from spaCy 3.8 (MIT license). See docs/resources.md.
+
+4. Sentiment lexicons — project-authored, MIT
+   Files: nlp_toolbox/resources/sentiment/*.txt
+   Hand-curated by the project author. See docs/resources.md.
+
+5. Evaluation datasets — original upstream licenses
+   Files: evals/datasets/
+   Each dataset retains its upstream license and attribution as documented in
+   evals/DATASETS.md. These licenses are not superseded by this repository's
+   MIT license.
+
+When redistributing this project or building derivative works, preserve the
+attribution and license terms for each asset class above.

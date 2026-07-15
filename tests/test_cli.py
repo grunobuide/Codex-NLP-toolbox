@@ -63,6 +63,31 @@ class TestCli(unittest.TestCase):
         self.assertEqual(len(payload["table"]), 3)
         self.assertEqual(payload["table"][0]["rank"], 1)
 
+    def test_language_char_ngram_default(self):
+        code, out = run_cli("language", str(self.file), "--json")
+        self.assertEqual(code, 0)
+        payload = json.loads(out)
+        self.assertEqual(payload["method"], "char-ngram")
+        self.assertEqual(payload["language"], "Portuguese")
+        self.assertIn("distances", payload)
+        self.assertFalse(payload["fallback"])
+
+    def test_language_hints_method(self):
+        code, out = run_cli("language", str(self.file), "--method", "hints", "--json")
+        payload = json.loads(out)
+        self.assertEqual(payload["method"], "hints")
+        self.assertEqual(payload["language"], "Portuguese")
+        self.assertIn("scores", payload)
+
+    def test_language_compare(self):
+        code, out = run_cli("language", str(self.file), "--compare", "--json")
+        payload = json.loads(out)
+        self.assertIn("hints", payload)
+        self.assertIn("char_ngram", payload)
+        self.assertEqual(payload["hints"]["language"], "Portuguese")
+        self.assertEqual(payload["char_ngram"]["language"], "Portuguese")
+        self.assertTrue(payload["agree"])
+
     def test_missing_file_returns_2(self):
         err = io.StringIO()
         with redirect_stderr(err):

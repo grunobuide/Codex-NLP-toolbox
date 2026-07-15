@@ -16,6 +16,7 @@ from nlp_toolbox.tools import (
     analyze_text,
     collocations,
     detect_language_details,
+    detect_language_ngram_details,
     extract_keywords,
     filter_tokens,
     kwic,
@@ -124,6 +125,43 @@ def _cmd_stem(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_language(args: argparse.Namespace) -> int:
+    text = _read_text(args.file)
+
+    def hints_result() -> dict[str, Any]:
+        details = detect_language_details(text)
+        return {
+            "language": details.language,
+            "fallback": details.fallback,
+            "tied_with": details.tied_with,
+            "scores": details.scores,
+        }
+
+    def ngram_result() -> dict[str, Any]:
+        details = detect_language_ngram_details(text)
+        return {
+            "language": details.language,
+            "fallback": details.fallback,
+            "distances": details.distances,
+        }
+
+    if args.compare:
+        hints = hints_result()
+        ngram = ngram_result()
+        payload: dict[str, Any] = {
+            "file": args.file,
+            "hints": hints,
+            "char_ngram": ngram,
+            "agree": hints["language"] == ngram["language"],
+        }
+    elif args.method == "hints":
+        payload = {"file": args.file, "method": "hints", **hints_result()}
+    else:
+        payload = {"file": args.file, "method": "char-ngram", **ngram_result()}
+    _emit(payload, args.json)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="codex-nlp",
@@ -172,6 +210,24 @@ def build_parser() -> argparse.ArgumentParser:
     stem.add_argument("words", nargs="+")
     stem.add_argument("--json", action="store_true")
     stem.set_defaults(handler=_cmd_stem)
+
+    language = subparsers.add_parser(
+        "language", help="Language ID: char n-grams (default) or hint words"
+    )
+    language.add_argument("file")
+    language.add_argument(
+        "--method",
+        choices=["char-ngram", "hints"],
+        default="char-ngram",
+        help="Detector to use (default: char-ngram, the stronger baseline)",
+    )
+    language.add_argument(
+        "--compare",
+        action="store_true",
+        help="Run both detectors side by side and report whether they agree",
+    )
+    language.add_argument("--json", action="store_true")
+    language.set_defaults(handler=_cmd_language)
 
     return parser
 

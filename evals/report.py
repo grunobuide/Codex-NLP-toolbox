@@ -18,6 +18,10 @@ Every result JSON records the git SHA, the dataset SHA-256 and the full
 confusion matrix. Dataset provenance and known biases: ``evals/DATASETS.md``.
 The toolbox methods are transparent baselines - they are *expected* to lose
 to specialized systems; the point is knowing by how much.
+
+These datasets are small and frozen (tens of examples per class), so read a
+small accuracy gap as what it is in absolute terms - a handful of examples,
+shown below each table - not as statistical equivalence or a decisive win.
 """
 
 
@@ -42,6 +46,13 @@ def main() -> int:
         for name, scores in data["systems"].items():
             cells = " | ".join(f"{scores[k]:.4f}" for k in metric_keys)
             sections.append(f"| {name} | {cells} |")
+        if "accuracy" in metric_keys:
+            n = data["dataset"]["n"]
+            errors = ", ".join(
+                f"{name} — {round((1 - scores['accuracy']) * n)}"
+                for name, scores in data["systems"].items()
+            )
+            sections.append(f"\nAbsolute errors (out of {n}): {errors}.")
         extra = data["systems"].get("toolbox lexicon", {}).get("zero_evidence_fraction")
         if extra is not None:
             sections.append(

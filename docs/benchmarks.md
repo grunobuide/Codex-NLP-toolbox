@@ -12,6 +12,10 @@ confusion matrix. Dataset provenance and known biases: ``evals/DATASETS.md``.
 The toolbox methods are transparent baselines - they are *expected* to lose
 to specialized systems; the point is knowing by how much.
 
+These datasets are small and frozen (tens of examples per class), so read a
+small accuracy gap as what it is in absolute terms - a handful of examples,
+shown below each table - not as statistical equivalence or a decisive win.
+
 
 ## language identification
 
@@ -22,6 +26,8 @@ Dataset: `evals/datasets/langid.tsv` (n=180, sha256 `cc86e071ff1f…`) — run a
 | toolbox hint-words | 0.7556 | 0.7543 |
 | toolbox char-ngrams | 0.9889 | 0.9889 |
 | langdetect 1.0.9 | 0.9944 | 0.9944 |
+
+Absolute errors (out of 180): toolbox hint-words — 44, toolbox char-ngrams — 2, langdetect 1.0.9 — 1.
 
 ## sentence segmentation (English, UD-EWT gold)
 
@@ -40,5 +46,7 @@ Dataset: `evals/datasets/sentiment_en.tsv` (n=120, sha256 `6e9bc36ec501…`) —
 |---|---|---|
 | toolbox lexicon | 0.7667 | 0.7643 |
 | VADER 3.3.2 | 0.8000 | 0.7995 |
+
+Absolute errors (out of 120): toolbox lexicon — 28, VADER 3.3.2 — 24.
 
 Toolbox lexicon had zero sentiment evidence (no lexicon hit) on 48% of sentences; those default to a negative prediction.

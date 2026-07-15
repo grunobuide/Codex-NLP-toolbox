@@ -15,11 +15,17 @@ versioning: [SemVer](https://semver.org/).
   `codex-nlp collocations`.
 - Porter stemmer (English) with documented over-stemming cases; CLI
   `codex-nlp stem`.
+- CLI `codex-nlp language` for language identification: `--method char-ngram`
+  (default) or `--method hints`, and `--compare` to run both detectors side by
+  side and report agreement.
+- Provenance manifest and reproducible build script
+  (`scripts/build_ngram_profiles.py`) for the char n-gram profiles, plus a
+  `NOTICE` separating code (MIT) from Wikipedia-derived profiles (CC BY-SA 4.0)
+  and evaluation datasets (upstream licenses).
 
 Planned (see [ROADMAP.md](ROADMAP.md) and [CONTENT_ROADMAP.md](CONTENT_ROADMAP.md)):
-character n-gram language detection (Cavnar–Trenkle), PMI/log-likelihood
-collocations, Porter stemmer, method handbook with hand-computed examples,
-case-study notebooks, instructor guide.
+method handbook with hand-computed examples, case-study notebooks, instructor
+guide, bilingual documentation layer, lesson mode.
 
 ## [1.0.0] — 2026-07-14
 

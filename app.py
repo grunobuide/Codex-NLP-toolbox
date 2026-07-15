@@ -635,8 +635,25 @@ else:
             render_tool_explanation("detect_language")
             ngram_details = detect_language_ngram_details(text_content)
             st.markdown("### Char n-gram detection")
-            st.write(f"**{ngram_details.language}** (lower distance = closer)")
-            st.bar_chart(ngram_details.distances)
+            st.write(f"**{ngram_details.language}** — closest profile (lowest distance)")
+            if ngram_details.distances:
+                ranked = sorted(ngram_details.distances.items(), key=lambda item: item[1])
+                distance_rows = [
+                    {
+                        "Rank": rank,
+                        "Language": language,
+                        "Distance": distance,
+                        "Closest": "◀ closest" if rank == 1 else "",
+                    }
+                    for rank, (language, distance) in enumerate(ranked, start=1)
+                ]
+                st.dataframe(distance_rows, use_container_width=True, hide_index=True)
+                st.caption(
+                    "Out-of-place distance: LOWER = closer to the language profile. "
+                    "Rank 1 is the detector's pick."
+                )
+            else:
+                st.caption("No letters in the text - defaulted to English (documented fallback).")
             render_tool_explanation("detect_language_ngram")
 
             if show_language_hints:

@@ -66,11 +66,20 @@ Method: Cavnar & Trenkle (1994), N-gram-based text categorization.
 
 Training data (fetched 2026-07-14): plain-text extracts of three Wikipedia
 articles per language — the article on the language itself, "Literature"
-and "Linguistics" in that language (60–171KB of text per language),
-CC BY-SA 4.0. Normalization: lowercase, non-letter runs collapsed to `_`.
-The frozen profile files are canonical; Wikipedia content changes over
-time, so retraining produces slightly different profiles (documented,
-versioned change).
+and "Linguistics" in that language (60–171KB of text per language).
+Normalization: lowercase, non-letter runs collapsed to `_`. The frozen
+profile files are canonical; Wikipedia content changes over time, so
+retraining produces slightly different profiles (documented, versioned
+change).
+
+**Provenance and licensing** — exact article titles, canonical URLs, the
+reproducible build script (`scripts/build_ngram_profiles.py`, which also
+emits a `manifest.json` with revision ids, timestamps and profile SHA-256s),
+and attribution are documented in
+[`nlp_toolbox/resources/ngram_profiles/PROVENANCE.md`](../nlp_toolbox/resources/ngram_profiles/PROVENANCE.md).
+These profiles are derived from Wikipedia text and are licensed **CC BY-SA
+4.0**, separately from the project's MIT-licensed code — see the top-level
+[`NOTICE`](../NOTICE).
 
 Measured effect (docs/benchmarks.md): 98.9% language-ID accuracy vs 75.6%
 for hint-words on the frozen eval set; on 2-word inputs, 61% vs 29%.

@@ -96,6 +96,8 @@ Measured, not asserted — full tables, confusion matrices and dataset provenanc
 | Binary sentiment EN (120 UCI review sentences) | v1 lexicon: 76.7% acc | VADER: 80.0% acc |
 | Sentence segmentation EN (60 UD-EWT gold) | regex: F1 0.919 | pysbd: F1 0.975 |
 
+On this small frozen dataset the char n-gram baseline made **one more error than langdetect** (≈178 vs ≈179 correct out of 180) — the accuracies are close, not evidence of statistical equivalence. The set has only 30 sentences per language drawn from a single literary work per language, so treat the gap as indicative, not conclusive (provenance and known biases: [docs/benchmarks.md](docs/benchmarks.md)). Planned benchmark hardening: confidence intervals, absolute error counts, other domains, real short texts, code-switching, and orthographic noise.
+
 The transparent baselines are *expected* to lose to specialized systems — the value is knowing by how much, and why: see the [error analysis](docs/error-analysis.md), where every failure mode is measured, classified as inherent or fixable, and pinned by a regression test.
 
 ## Non-goals
