@@ -58,21 +58,21 @@ Document where the heuristics fail and why.
 
 **Visible outcome:** a limitations report that demonstrates measurement-driven engineering judgment — the rarest artifact in portfolio repos.
 
-## Phase 5 — Public demo (~1 week)
+## Phase 5 — Public demo ✅
 
 - [x] Public demo on Streamlit Community Cloud (HF Spaces now requires a paid tier for Docker, and the native Streamlit SDK was deprecated). `requirements.txt` is the Cloud deployment manifest; a HF Spaces sync workflow (`hf-space.yml`) remains available, gated on the `HF_SPACE` variable, if a Docker Space becomes viable later.
 - [x] Add a **Benchmarks** tab to the app rendering the eval JSON outputs.
 - [x] Licensed sample texts per language, one-click loadable.
-- [ ] Short GIF at the top of the README (record from the live Space). Exportable JSON from the app: done.
+- [x] Short GIF at the top of the README (recorded from the live app). Exportable JSON from the app: done.
 
 **Visible outcome:** a live URL in the README and repo description — zero-setup proof it works.
 
 ## Phase 6 — Release & communication (~1 week)
 
-- [ ] `v1.0.0` released to PyPI via GitHub Actions trusted publishing.
-- [ ] `CHANGELOG.md` (Keep a Changelog format).
-- [ ] `docs/architecture.md` plus 3–5 short ADRs recording real decisions (license, uv, eval design, why no ML dependencies).
-- [ ] `CITATION.cff`.
+- [x] Release pipeline ready: `release.yml` publishes on `v*` tags via PyPI trusted publishing (OIDC), gated on the full test suite. First release pending the one-time PyPI publisher setup + tag.
+- [x] `CHANGELOG.md` (Keep a Changelog format), v1.0.0.
+- [x] `docs/architecture.md` plus 5 ADRs (license, uv/PEP 621, no-ML runtime, frozen datasets, Streamlit Cloud deploy).
+- [x] `CITATION.cff`.
 - [ ] GitHub polish: repo description, topics, social preview image, pinned on profile.
 
 **Visible outcome:** `pip install codex-nlp-toolbox` works; the repo reads as a maintained, versioned project.

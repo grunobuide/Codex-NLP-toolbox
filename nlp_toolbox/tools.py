@@ -7,7 +7,7 @@ hand. See ``docs/handbook/`` (planned) for worked examples and
 
 import re
 from collections import Counter
-from math import log10
+from math import log, log10
 from typing import NamedTuple
 
 from nlp_toolbox.languages import (
@@ -365,6 +365,220 @@ def vocabulary_growth(tokens: list[str], step: int = 100) -> list[dict[str, int]
     if tokens and (not points or points[-1]["tokens_seen"] != len(tokens)):
         points.append({"tokens_seen": len(tokens), "vocabulary_size": len(seen)})
     return points
+
+
+def collocations(
+    tokens: list[str], min_count: int = 3, top_k: int = 20
+) -> list[dict[str, str | int | float]]:
+    """Rank adjacent bigrams by log-likelihood ratio (Dunning 1993), with PMI.
+
+    PMI = log2( p(xy) / (p(x) * p(y)) ) rewards pairs that co-occur more than
+    chance predicts, but explodes for rare pairs — hence the ``min_count``
+    floor and the LLR ranking. LLR (G²) compares the observed contingency
+    table of the bigram against independence; it is robust at low counts.
+    Reference: Dunning, T. (1993). Accurate methods for the statistics of
+    surprise and coincidence. Computational Linguistics, 19(1).
+    """
+    n_bigrams = len(tokens) - 1
+    if n_bigrams < 1:
+        return []
+    unigram_counts = Counter(tokens)
+    bigram_counts = Counter(zip(tokens, tokens[1:], strict=False))
+
+    def _entropy_term(k: int, n: int) -> float:
+        return k * log(k / n) if k > 0 and n > 0 else 0.0
+
+    results: list[dict[str, str | int | float]] = []
+    for (first, second), count in bigram_counts.items():
+        if count < min_count:
+            continue
+        c1 = sum(v for (a, _), v in bigram_counts.items() if a == first)
+        c2 = sum(v for (_, b), v in bigram_counts.items() if b == second)
+        # observed contingency table for the bigram
+        k11 = count
+        k12 = c1 - count
+        k21 = c2 - count
+        k22 = n_bigrams - c1 - c2 + count
+        row1, row2 = k11 + k12, k21 + k22
+        col1, col2 = k11 + k21, k12 + k22
+        observed = sum(_entropy_term(k, n_bigrams) for k in (k11, k12, k21, k22))
+        expected = (
+            _entropy_term(row1, n_bigrams)
+            + _entropy_term(row2, n_bigrams)
+            + _entropy_term(col1, n_bigrams)
+            + _entropy_term(col2, n_bigrams)
+        ) - _entropy_term(n_bigrams, n_bigrams)
+        llr = round(2 * (observed - expected), 4)
+        p_xy = count / n_bigrams
+        p_x = unigram_counts[first] / len(tokens)
+        p_y = unigram_counts[second] / len(tokens)
+        pmi = round(log(p_xy / (p_x * p_y), 2), 4)
+        results.append({"bigram": f"{first} {second}", "count": count, "pmi": pmi, "llr": llr})
+    results.sort(key=lambda row: (-float(row["llr"]), str(row["bigram"])))
+    return results[:top_k]
+
+
+_PORTER_VOWELS = "aeiou"
+
+
+def porter_stem(word: str) -> str:
+    """Porter stemmer (Porter 1980), the classic rule-based normalizer.
+
+    A worked example of suffix-stripping morphology: transparent,
+    language-specific (English only) and famously imperfect —
+    ``university`` → ``univers``, ``relational`` → ``relat``. Failure cases
+    are part of the lesson; see docs/error-analysis.md.
+    Reference: Porter, M.F. (1980). An algorithm for suffix stripping.
+    Program, 14(3).
+    """
+    word = word.lower()
+    if len(word) <= 2:
+        return word
+
+    def is_consonant(w: str, i: int) -> bool:
+        char = w[i]
+        if char in _PORTER_VOWELS:
+            return False
+        if char == "y":
+            return i == 0 or not is_consonant(w, i - 1)
+        return True
+
+    def measure(stem: str) -> int:
+        forms = "".join("c" if is_consonant(stem, i) else "v" for i in range(len(stem)))
+        return forms.count("vc")
+
+    def has_vowel(stem: str) -> bool:
+        return any(not is_consonant(stem, i) for i in range(len(stem)))
+
+    def ends_double_consonant(stem: str) -> bool:
+        return len(stem) >= 2 and stem[-1] == stem[-2] and is_consonant(stem, len(stem) - 1)
+
+    def ends_cvc(stem: str) -> bool:
+        if len(stem) < 3:
+            return False
+        return (
+            is_consonant(stem, len(stem) - 3)
+            and not is_consonant(stem, len(stem) - 2)
+            and is_consonant(stem, len(stem) - 1)
+            and stem[-1] not in "wxy"
+        )
+
+    # step 1a
+    if word.endswith("sses") or word.endswith("ies"):
+        word = word[:-2]
+    elif not word.endswith("ss") and word.endswith("s"):
+        word = word[:-1]
+
+    # step 1b
+    if word.endswith("eed"):
+        if measure(word[:-3]) > 0:
+            word = word[:-1]
+    else:
+        flag = False
+        if word.endswith("ed") and has_vowel(word[:-2]):
+            word, flag = word[:-2], True
+        elif word.endswith("ing") and has_vowel(word[:-3]):
+            word, flag = word[:-3], True
+        if flag:
+            if word.endswith(("at", "bl", "iz")):
+                word += "e"
+            elif ends_double_consonant(word) and word[-1] not in "lsz":
+                word = word[:-1]
+            elif measure(word) == 1 and ends_cvc(word):
+                word += "e"
+
+    # step 1c
+    if word.endswith("y") and has_vowel(word[:-1]):
+        word = word[:-1] + "i"
+
+    def replace(end: str, repl: str, min_measure: int = 0) -> bool:
+        nonlocal word
+        if word.endswith(end) and measure(word[: -len(end)]) > min_measure:
+            word = word[: -len(end)] + repl
+            return True
+        return word.endswith(end)
+
+    # step 2
+    for end, repl in (
+        ("ational", "ate"),
+        ("tional", "tion"),
+        ("enci", "ence"),
+        ("anci", "ance"),
+        ("izer", "ize"),
+        ("abli", "able"),
+        ("alli", "al"),
+        ("entli", "ent"),
+        ("eli", "e"),
+        ("ousli", "ous"),
+        ("ization", "ize"),
+        ("ation", "ate"),
+        ("ator", "ate"),
+        ("alism", "al"),
+        ("iveness", "ive"),
+        ("fulness", "ful"),
+        ("ousness", "ous"),
+        ("aliti", "al"),
+        ("iviti", "ive"),
+        ("biliti", "ble"),
+    ):
+        if word.endswith(end):
+            replace(end, repl)
+            break
+
+    # step 3
+    for end, repl in (
+        ("icate", "ic"),
+        ("ative", ""),
+        ("alize", "al"),
+        ("iciti", "ic"),
+        ("ical", "ic"),
+        ("ful", ""),
+        ("ness", ""),
+    ):
+        if word.endswith(end):
+            replace(end, repl)
+            break
+
+    # step 4
+    for end in (
+        "al",
+        "ance",
+        "ence",
+        "er",
+        "ic",
+        "able",
+        "ible",
+        "ant",
+        "ement",
+        "ment",
+        "ent",
+        "ou",
+        "ism",
+        "ate",
+        "iti",
+        "ous",
+        "ive",
+        "ize",
+    ):
+        if word.endswith(end):
+            if measure(word[: -len(end)]) > 1:
+                word = word[: -len(end)]
+            break
+    else:
+        if word.endswith("ion") and len(word) > 3 and word[-4] in "st" and measure(word[:-3]) > 1:
+            word = word[:-3]
+
+    # step 5a
+    if word.endswith("e"):
+        stem = word[:-1]
+        if measure(stem) > 1 or (measure(stem) == 1 and not ends_cvc(stem)):
+            word = stem
+
+    # step 5b
+    if measure(word) > 1 and ends_double_consonant(word) and word.endswith("l"):
+        word = word[:-1]
+
+    return word
 
 
 def _estimate_syllables(word: str, language: str = "English") -> int:

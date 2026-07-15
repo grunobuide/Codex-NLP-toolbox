@@ -1,6 +1,6 @@
 [project]
 name = "codex-nlp-toolbox"
-version = "0.1.0"
+version = "1.0.0"
 description = "A reproducible, evaluation-driven NLP toolbox for transparent linguistic baselines"
 readme = "README.md"
 license = { file = "LICENSE" }

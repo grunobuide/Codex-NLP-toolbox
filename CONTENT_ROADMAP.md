@@ -49,6 +49,44 @@ Plus **case studies** as runnable notebooks in `examples/` (Colab badge):
 - [ ] README section **"Use this to…"** with three concrete scenarios and screenshots: teach a lab, profile a corpus, establish a baseline before modeling.
 - [ ] **Instructor guide** (`docs/classroom.md`): a ready-to-use 90-minute lab plan with exercises and answers.
 
+## The course
+
+The remaining content work is organized around a recorded course:
+**"Linguística de corpus computacional: métodos transparentes"** — 7 lessons
+of 15–30 min in Brazilian Portuguese, for Letters/Linguistics students, with
+the live app as the on-screen material. Full syllabus and per-lesson
+recording scripts: [docs/course/syllabus.md](docs/course/syllabus.md).
+
+| # | Lesson (PT-BR) | App surface | Needs building |
+|---|---|---|---|
+| 1 | O texto como dados: tokens, sentenças, tipos e ocorrências | Analyze → Text structure | lesson presets + bilingual cards |
+| 2 | Leis estatísticas da língua: Zipf e crescimento do vocabulário | Analyze → Descriptive stats | notebook *One novel, six languages* |
+| 3 | Palavras-chave e colocações: frequência, TF-IDF, KWIC, PMI | Analyze → Information extraction | **collocations (PMI/LLR)** |
+| 4 | Que língua é essa? Evidência, empates e fallback | Analyze → Language profile | **char n-gram detector** + short-text notebook |
+| 5 | Sentimento com dicionários: léxicos, morfologia e negação | Analyze → Sentiment | **Porter stemmer** + lexicon-size notebook |
+| 6 | Legibilidade e estilo: fórmulas por língua, comparação de traduções | Compare two texts | (ready) |
+| 7 | Como saber se funciona? Ouro, métricas e análise de erros | Benchmarks | (ready — the signature lesson) |
+
+### Course phases
+
+- [ ] **C1 — Missing methods** (unblocks lessons 3–5): character n-gram
+  detection (Cavnar–Trenkle) with eval entry proving the upgrade over
+  hint-words; collocations via PMI and log-likelihood; Porter stemmer with
+  documented failure cases. Each with tests, method card, CLI subcommand.
+- [ ] **C2 — Bilingual didactic layer**: EN/PT-BR toggle for the app's
+  didactic strings (method cards, captions, tour) — code and API stay in
+  English; the recorded screen reads in Portuguese.
+- [ ] **C3 — Handbook** (`docs/handbook/`, bilingual): one page per method
+  with the formula, a worked example computed by hand, limitations (from
+  the error analysis) and references. This is the course's *apostila*.
+- [ ] **C4 — Per-lesson material** (`docs/course/`): recording script per
+  lesson (what to show, what to type, expected numbers on screen),
+  exercises with answer keys, the three case-study notebooks in
+  `examples/` (Colab-ready).
+- [ ] **C5 — Lesson mode in the app**: a lesson selector that pre-loads the
+  right sample text, pre-enables the right tools, and shows a short guided
+  reading — so each recording starts from a reproducible screen state.
+
 ## Sequencing with the engineering roadmap
 
 | Engineering phase | Content work that pairs with it |

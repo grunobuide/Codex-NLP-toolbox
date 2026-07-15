@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "Codex NLP Toolbox: transparent linguistic baselines with a reproducible evaluation harness"
+authors:
+  - family-names: "Guide"
+    given-names: "Bruno"
+version: 1.0.0
+date-released: 2026-07-14
+license: MIT
+repository-code: "https://github.com/grunobuide/Codex-NLP-toolbox"
+url: "https://codex-nlp-toolbox.streamlit.app"
+keywords:
+  - natural language processing
+  - interpretable baselines
+  - evaluation
+  - readability
+  - language identification
+  - sentiment analysis

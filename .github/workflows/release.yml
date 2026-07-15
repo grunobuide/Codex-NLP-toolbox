@@ -1,0 +1,42 @@
+name: Release to PyPI
+
+# Publishes on version tags (v1.0.0, v1.1.0, ...) via PyPI trusted publishing
+# (OIDC - no API token stored anywhere).
+# One-time setup on pypi.org: Account -> Publishing -> Add a pending publisher:
+#   project: codex-nlp-toolbox, owner: grunobuide, repo: Codex-NLP-toolbox,
+#   workflow: release.yml, environment: pypi
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - run: uv sync --group dev
+      - run: uv run ruff check nlp_toolbox tests app.py evals
+      - run: uv run mypy
+      - run: uv run pytest
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - name: Check tag matches project version
+        run: |
+          VERSION=$(uv version --short 2>/dev/null || grep -m1 '^version' pyproject.toml | cut -d'"' -f2)
+          [ "v$VERSION" = "$GITHUB_REF_NAME" ] || { echo "tag $GITHUB_REF_NAME != version $VERSION"; exit 1; }
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Publish to PyPI (trusted publishing)
+        uses: pypa/gh-action-pypi-publish@release/v1

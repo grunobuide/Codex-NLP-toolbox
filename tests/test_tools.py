@@ -4,6 +4,7 @@ from nlp_toolbox.languages import get_language_config
 from nlp_toolbox.tools import (
     _estimate_syllables,
     analyze_text,
+    collocations,
     detect_language,
     detect_language_details,
     extract_keywords,
@@ -11,6 +12,7 @@ from nlp_toolbox.tools import (
     generate_ngrams,
     kwic,
     language_hint_hits,
+    porter_stem,
     readability_score,
     sentiment_analysis,
     split_sentences,
@@ -251,6 +253,68 @@ class TestMultilingualSentiment(unittest.TestCase):
     def test_unsupported_language_scores_zero(self):
         result = sentiment_analysis(["good", "bad"], "Klingon")
         self.assertEqual(result, {"positive": 0, "negative": 0, "score": 0.0})
+
+
+class TestCollocations(unittest.TestCase):
+    def setUp(self):
+        self.tokens = "o gato preto o gato preto o gato branco e o cão preto".split()
+
+    def test_llr_ranks_frequent_pair_first(self):
+        result = collocations(self.tokens, min_count=2, top_k=3)
+        self.assertEqual(result[0]["bigram"], "o gato")
+        self.assertEqual(result[0]["count"], 3)
+
+    def test_min_count_filters_rare_pairs(self):
+        result = collocations(self.tokens, min_count=2)
+        self.assertTrue(all(int(str(row["count"])) >= 2 for row in result))
+        self.assertNotIn("gato branco", [row["bigram"] for row in result])
+
+    def test_pmi_positive_for_associated_pair(self):
+        result = collocations(self.tokens, min_count=2)
+        top = next(row for row in result if row["bigram"] == "o gato")
+        self.assertGreater(float(str(top["pmi"])), 0)
+
+    def test_empty_and_tiny_input(self):
+        self.assertEqual(collocations([]), [])
+        self.assertEqual(collocations(["um"]), [])
+
+
+class TestPorterStemmer(unittest.TestCase):
+    def test_classic_vectors(self):
+        # from Porter (1980) and the reference implementation's behavior
+        for word, stem in [
+            ("caresses", "caress"),
+            ("ponies", "poni"),
+            ("ties", "ti"),
+            ("caress", "caress"),
+            ("cats", "cat"),
+            ("feed", "feed"),
+            ("agreed", "agre"),
+            ("plastered", "plaster"),
+            ("bled", "bled"),
+            ("motoring", "motor"),
+            ("sing", "sing"),
+            ("running", "run"),
+            ("happy", "happi"),
+            ("relational", "relat"),
+            ("conditional", "condit"),
+            ("hopeful", "hope"),
+            ("goodness", "good"),
+            ("formalize", "formal"),
+            ("adjustment", "adjust"),
+            ("effective", "effect"),
+        ]:
+            with self.subTest(word=word):
+                self.assertEqual(porter_stem(word), stem)
+
+    def test_documented_failure_cases(self):
+        # over-stemming is part of the lesson, not a bug to hide
+        self.assertEqual(porter_stem("university"), "univers")
+        self.assertEqual(porter_stem("universal"), "univers")  # collision!
+
+    def test_short_words_untouched(self):
+        self.assertEqual(porter_stem("is"), "is")
+        self.assertEqual(porter_stem("a"), "a")
 
 
 if __name__ == "__main__":

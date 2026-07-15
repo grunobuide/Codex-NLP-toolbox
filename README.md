@@ -10,6 +10,8 @@ A reproducible, evaluation-driven NLP toolbox for **transparent linguistic basel
 
 **[Live demo](https://codex-nlp-toolbox.streamlit.app)** — analyze text in six languages, compare two texts side by side, and inspect the benchmark results, no setup required.
 
+[![Demo: analyze, compare and benchmark modes](docs/codex-nlp-toolbox-demo.gif)](https://codex-nlp-toolbox.streamlit.app)
+
 Every method here is an interpretable baseline: rule-based, lexicon-based, or frequency-based, implemented from scratch with no ML dependencies. You can trace any output back to the exact heuristic that produced it. A Streamlit app wraps the library so each result can be inspected alongside an explanation of the mechanism behind it.
 
 ## Why interpretable baselines?
