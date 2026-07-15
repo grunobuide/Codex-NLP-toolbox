@@ -58,3 +58,19 @@ Known limitations (measured in `docs/benchmarks.md`):
 - **Register** — general vocabulary; slang and domain jargon are absent.
 - Lexicon size is a teachable variable: the eval harness can measure
   accuracy as a function of lexicon size (planned case study).
+
+## Character n-gram profiles (`nlp_toolbox/resources/ngram_profiles/`)
+
+Top-300 character trigrams per language, rank order, one per line.
+Method: Cavnar & Trenkle (1994), N-gram-based text categorization.
+
+Training data (fetched 2026-07-14): plain-text extracts of three Wikipedia
+articles per language — the article on the language itself, "Literature"
+and "Linguistics" in that language (60–171KB of text per language),
+CC BY-SA 4.0. Normalization: lowercase, non-letter runs collapsed to `_`.
+The frozen profile files are canonical; Wikipedia content changes over
+time, so retraining produces slightly different profiles (documented,
+versioned change).
+
+Measured effect (docs/benchmarks.md): 98.9% language-ID accuracy vs 75.6%
+for hint-words on the frozen eval set; on 2-word inputs, 61% vs 29%.

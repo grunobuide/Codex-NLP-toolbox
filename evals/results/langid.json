@@ -60,6 +60,60 @@
         }
       }
     },
+    "toolbox char-ngrams": {
+      "accuracy": 0.9889,
+      "macro_f1": 0.9889,
+      "confusion": {
+        "de": {
+          "de": 30,
+          "en": 0,
+          "es": 0,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "en": {
+          "de": 0,
+          "en": 30,
+          "es": 0,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "es": {
+          "de": 0,
+          "en": 0,
+          "es": 30,
+          "fr": 0,
+          "it": 0,
+          "pt": 0
+        },
+        "fr": {
+          "de": 0,
+          "en": 0,
+          "es": 0,
+          "fr": 30,
+          "it": 0,
+          "pt": 0
+        },
+        "it": {
+          "de": 0,
+          "en": 0,
+          "es": 0,
+          "fr": 1,
+          "it": 29,
+          "pt": 0
+        },
+        "pt": {
+          "de": 0,
+          "en": 0,
+          "es": 1,
+          "fr": 0,
+          "it": 0,
+          "pt": 29
+        }
+      }
+    },
     "langdetect 1.0.9": {
       "accuracy": 0.9944,
       "macro_f1": 0.9944,
@@ -115,6 +169,6 @@
       }
     }
   },
-  "git_sha": "b27b4be2d44415ed30356dd3661b6e37deddc044",
-  "timestamp_utc": "2026-07-14T14:08:23+00:00"
+  "git_sha": "4998fcde338c111bb250ce722149b8b86ed68f4e",
+  "timestamp_utc": "2026-07-15T01:36:08+00:00"
 }

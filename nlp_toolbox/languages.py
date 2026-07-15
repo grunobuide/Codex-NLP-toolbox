@@ -78,6 +78,22 @@ def load_sentiment_lexicon(language_name: str) -> tuple[frozenset[str], frozense
     return _read("positive"), _read("negative")
 
 
+@cache
+def load_ngram_profile(language_name: str) -> tuple[str, ...]:
+    """Load the ranked character-trigram profile for ``language_name``.
+
+    Top-300 trigrams (rank order) trained on Wikipedia article extracts
+    (CC BY-SA); provenance and training procedure in ``docs/resources.md``.
+    Unsupported languages get an empty profile.
+    """
+    code = _LANGUAGE_CODES.get(language_name)
+    if code is None:
+        return ()
+    ref = resources.files("nlp_toolbox.resources.ngram_profiles").joinpath(f"{code}.txt")
+    text = ref.read_text(encoding="utf-8")
+    return tuple(line.strip() for line in text.splitlines() if line.strip())
+
+
 def get_language_config(language_name: str) -> LanguageConfig:
     """Return the stopwords and detection hints for ``language_name``.
 

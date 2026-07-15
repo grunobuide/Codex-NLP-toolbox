@@ -14,6 +14,7 @@ from nlp_toolbox.languages import (
     LANGUAGE_OPTIONS,
     LanguageConfig,
     get_language_config,
+    load_ngram_profile,
     load_sentiment_lexicon,
 )
 
@@ -579,6 +580,68 @@ def porter_stem(word: str) -> str:
         word = word[:-1]
 
     return word
+
+
+def build_ngram_profile(text: str, size: int = 300) -> list[str]:
+    """Ranked character-trigram profile of ``text`` (Cavnar-Trenkle 1994).
+
+    Normalization: lowercase; every non-letter run becomes a single ``_``
+    (word boundary); trigrams containing at least one letter are counted
+    and ranked by frequency (ties alphabetical). Reference: Cavnar, W. &
+    Trenkle, J. (1994). N-gram-based text categorization. SDAIR-94.
+    """
+    normalized = "".join(ch if ch.isalpha() else "_" for ch in text.lower())
+    normalized = "_" + re.sub(r"_+", "_", normalized) + "_"
+    counts = Counter(
+        normalized[i : i + 3]
+        for i in range(len(normalized) - 2)
+        if any(ch.isalpha() for ch in normalized[i : i + 3])
+    )
+    ranked = sorted(counts.items(), key=lambda item: (-item[1], item[0]))
+    return [trigram for trigram, _ in ranked[:size]]
+
+
+class NgramDetection(NamedTuple):
+    """Outcome of character n-gram language detection.
+
+    ``distances`` maps each language to its out-of-place distance from the
+    text profile — LOWER is closer. ``fallback`` is True when the text has
+    no letters (English by convention, same contract as the hint-word
+    detector).
+    """
+
+    language: str
+    distances: dict[str, int]
+    fallback: bool
+
+
+def detect_language_ngram_details(text: str) -> NgramDetection:
+    """Detect language by comparing trigram profiles (out-of-place distance).
+
+    For each trigram in the text profile, the penalty is the absolute
+    difference between its rank in the text and its rank in the language
+    profile (missing: penalty = profile size). Fully inspectable: every
+    penalty can be recomputed from the shipped profile files.
+    """
+    text_profile = build_ngram_profile(text)
+    if not text_profile:
+        return NgramDetection("English", {}, True)
+    distances: dict[str, int] = {}
+    for language in LANGUAGE_OPTIONS:
+        profile = load_ngram_profile(language)
+        ranks = {trigram: rank for rank, trigram in enumerate(profile)}
+        max_penalty = len(profile)
+        distances[language] = sum(
+            abs(rank - ranks[trigram]) if trigram in ranks else max_penalty
+            for rank, trigram in enumerate(text_profile)
+        )
+    best = min(LANGUAGE_OPTIONS, key=lambda lang: distances[lang])
+    return NgramDetection(best, distances, False)
+
+
+def detect_language_ngram(text: str) -> str:
+    """Convenience wrapper over ``detect_language_ngram_details``."""
+    return detect_language_ngram_details(text).language
 
 
 def _estimate_syllables(word: str, language: str = "English") -> int:

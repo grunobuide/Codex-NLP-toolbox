@@ -15,11 +15,12 @@ to specialized systems; the point is knowing by how much.
 
 ## language identification
 
-Dataset: `evals/datasets/langid.tsv` (n=180, sha256 `cc86e071ff1f…`) — run at 2026-07-14T14:08:23+00:00, commit `b27b4be2d4`.
+Dataset: `evals/datasets/langid.tsv` (n=180, sha256 `cc86e071ff1f…`) — run at 2026-07-15T01:36:08+00:00, commit `4998fcde33`.
 
 | System | accuracy | macro f1 |
 |---|---|---|
 | toolbox hint-words | 0.7556 | 0.7543 |
+| toolbox char-ngrams | 0.9889 | 0.9889 |
 | langdetect 1.0.9 | 0.9944 | 0.9944 |
 
 ## sentence segmentation (English, UD-EWT gold)

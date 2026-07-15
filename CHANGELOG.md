@@ -6,6 +6,16 @@ versioning: [SemVer](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+
+- Character n-gram language detection (Cavnar–Trenkle 1994) with shipped
+  Wikipedia-trained trigram profiles: 98.9% language-ID accuracy vs 75.6%
+  for hint-words; 61% vs 29% on 2-word inputs. New benchmark row and probe.
+- Collocations via PMI and log-likelihood ratio (Dunning 1993); CLI
+  `codex-nlp collocations`.
+- Porter stemmer (English) with documented over-stemming cases; CLI
+  `codex-nlp stem`.
+
 Planned (see [ROADMAP.md](ROADMAP.md) and [CONTENT_ROADMAP.md](CONTENT_ROADMAP.md)):
 character n-gram language detection (Cavnar–Trenkle), PMI/log-likelihood
 collocations, Porter stemmer, method handbook with hand-computed examples,

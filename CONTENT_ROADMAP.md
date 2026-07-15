@@ -13,17 +13,17 @@ The current lexicons are placeholders (~15 stopwords per language, 30 English-on
 - [x] **Stopword lists**: 100–300 entries per language, adapted from spaCy 3.8 (MIT); 305–624 entries per language. Each list documented with source, size, and known gaps in `docs/resources.md`.
 - [x] **Sentiment lexicons for all six languages**: curated per-language lists (~200 entries each) with documented methodology and license. Lexicon size becomes a teachable variable — the eval harness (engineering roadmap, Phase 3) can show accuracy as a function of lexicon size.
 - [x] **Language-specific readability formulas**, each with its academic citation: Flesch (EN), Fernández-Huerta (ES), Kandel-Moles (FR), Amstad (DE), Franchina-Vacca (IT), Martins adaptation (PT). Replaces the current English formula silently applied to every language.
-- [ ] **Character n-gram language detection** (Cavnar–Trenkle) alongside the hint-word method: still fully interpretable, dramatically better on short texts, and a classic paper students should meet.
+- [x] **Character n-gram language detection** (Cavnar–Trenkle) alongside the hint-word method: still fully interpretable, dramatically better on short texts, and a classic paper students should meet.
 
 ## Track 2 — Core-curriculum methods
 
 New tools, chosen because they appear in every intro NLP syllabus and stay hand-inspectable:
 
 - [x] **TF-IDF keyword extraction** — presented side by side with raw frequency so students see *why* IDF matters.
-- [ ] **Collocations** via PMI and log-likelihood ratio.
+- [x] **Collocations** via PMI and log-likelihood ratio.
 - [x] **KWIC concordance** (keyword in context) — the classic corpus-linguistics view.
 - [x] **Zipf's law plot** (rank–frequency) and **vocabulary growth curve** — highly visual, one-slide teachable.
-- [ ] **Porter stemmer** (English) as a worked example of rule-based normalization, with documented failure cases.
+- [x] **Porter stemmer** (English) as a worked example of rule-based normalization, with documented failure cases.
 - [x] **Text comparison mode**: load two texts side by side — two authors, two translations, two registers — and compare every metric. This is the killer classroom feature.
 
 Every new method ships with: unit tests, a method card (what/how/why/explore), and an eval entry where a gold standard exists.
@@ -69,7 +69,7 @@ recording scripts: [docs/course/syllabus.md](docs/course/syllabus.md).
 
 ### Course phases
 
-- [ ] **C1 — Missing methods** (unblocks lessons 3–5): character n-gram
+- [x] **C1 — Missing methods** ✅ (unblocks lessons 3–5): character n-gram
   detection (Cavnar–Trenkle) with eval entry proving the upgrade over
   hint-words; collocations via PMI and log-likelihood; Porter stemmer with
   documented failure cases. Each with tests, method card, CLI subcommand.

@@ -23,6 +23,7 @@ from typing import Any
 from evals.metrics import accuracy, confusion_matrix, macro_f1, sentence_prf
 from nlp_toolbox.tools import (
     detect_language_details,
+    detect_language_ngram,
     sentiment_analysis,
     split_sentences,
     tokenize_text,
@@ -78,6 +79,7 @@ def task_langid() -> dict[str, Any]:
     texts = [r[1] for r in rows]
 
     toolbox = [NAME_TO_CODE[detect_language_details(t).language] for t in texts]
+    toolbox_ngram = [NAME_TO_CODE[detect_language_ngram(t)] for t in texts]
 
     def _ld(text: str) -> str:
         try:
@@ -93,6 +95,7 @@ def task_langid() -> dict[str, Any]:
             gold,
             {
                 "toolbox hint-words": toolbox,
+                "toolbox char-ngrams": toolbox_ngram,
                 f"langdetect {version('langdetect')}": baseline,
             },
         ),

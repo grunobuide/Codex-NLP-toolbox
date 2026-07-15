@@ -17,17 +17,18 @@ sentences (`docs/benchmarks.md`).
 The detector only sees 6–7 function words per language. Short inputs often
 contain none of them, triggering the documented English fallback:
 
-| Input | Accuracy | English-fallback rate |
-|---|---|---|
-| first 2 words | 0.2889 | 77% |
-| first 4 words | 0.4611 | 51% |
-| first 8 words | 0.5889 | 28% |
-| first 16 words | 0.7278 | 11% |
-| full sentence | 0.7556 | 10% |
+| Input | Hint-words acc | Char-ngrams acc | Hint fallback rate |
+|---|---|---|---|
+| first 2 words | 0.2889 | 0.6111 | 77% |
+| first 4 words | 0.4611 | 0.8111 | 51% |
+| first 8 words | 0.5889 | 0.9111 | 28% |
+| first 16 words | 0.7278 | 0.9889 | 11% |
+| full sentence | 0.7556 | 0.9889 | 10% |
 
 Root cause: evidence sparsity, not noise — accuracy tracks the fallback
-rate almost exactly. The planned character n-gram detector (Cavnar–Trenkle)
-attacks precisely this: character statistics exist in *every* token.
+rate almost exactly. The character n-gram detector (Cavnar–Trenkle) attacks precisely this —
+character statistics exist in *every* token — and the table shows it
+delivering: 98.9% on full sentences, matching langdetect within 0.6 points.
 
 ### Failure mode 2 — shared Romance hint words (structural)
 
@@ -108,12 +109,12 @@ regression test. No public function crashes on arbitrary Unicode input
 
 | Failure | Verdict | Planned remedy |
 |---|---|---|
-| Language ID on short text | mitigable | character n-gram detector |
-| Romance hint overlap | fixable | disjoint hints / n-gram detector |
+| Language ID on short text | mitigated ✅ | char n-gram detector shipped (61% vs 29% on 2 words) |
+| Romance hint overlap | fixed by alternative ✅ | n-gram detector: fr→es confusions eliminated |
 | Non-Latin scripts | out of scope | explicit fallback flag (done) |
 | Sentiment coverage gap | fixable | grow lexicons, measure vs size |
 | Negation blindness | inherent to BoW | negation-window rule (teachable) |
-| Morphology misses | partially fixable | stemmer with documented failures |
+| Morphology misses | partially fixable | Porter stemmer shipped (EN), failure cases pinned |
 | Abbreviation over-split | partially fixable | abbreviation list (costs transparency) |
 | Missing-punct under-split | inherent | document; compare with ML segmenters |
 | Cross-language readability comparison | invalid by design | document (done) |

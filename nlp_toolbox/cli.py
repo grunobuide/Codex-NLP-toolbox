@@ -14,10 +14,12 @@ from nlp_toolbox.languages import LANGUAGE_OPTIONS, get_language_config
 from nlp_toolbox.tools import (
     READABILITY_FORMULAS,
     analyze_text,
+    collocations,
     detect_language_details,
     extract_keywords,
     filter_tokens,
     kwic,
+    porter_stem,
     readability_score,
     split_sentences,
     tfidf_keywords,
@@ -108,6 +110,20 @@ def _cmd_zipf(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_collocations(args: argparse.Namespace) -> int:
+    text = _read_text(args.file)
+    tokens = tokenize_text(text)
+    rows = collocations(tokens, min_count=args.min_count, top_k=args.top_k)
+    _emit({"file": args.file, "collocations": rows}, args.json)
+    return 0
+
+
+def _cmd_stem(args: argparse.Namespace) -> int:
+    stems = [{"word": word, "stem": porter_stem(word)} for word in args.words]
+    _emit({"stems": stems}, args.json)
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         prog="codex-nlp",
@@ -144,6 +160,18 @@ def build_parser() -> argparse.ArgumentParser:
     zipf.add_argument("--top-k", type=int, default=50)
     zipf.add_argument("--json", action="store_true")
     zipf.set_defaults(handler=_cmd_zipf)
+
+    colloc = subparsers.add_parser("collocations", help="Bigram collocations (PMI + LLR)")
+    colloc.add_argument("file")
+    colloc.add_argument("--min-count", type=int, default=3)
+    colloc.add_argument("--top-k", type=int, default=20)
+    colloc.add_argument("--json", action="store_true")
+    colloc.set_defaults(handler=_cmd_collocations)
+
+    stem = subparsers.add_parser("stem", help="Porter-stem English words")
+    stem.add_argument("words", nargs="+")
+    stem.add_argument("--json", action="store_true")
+    stem.set_defaults(handler=_cmd_stem)
 
     return parser
 

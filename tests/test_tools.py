@@ -4,9 +4,12 @@ from nlp_toolbox.languages import get_language_config
 from nlp_toolbox.tools import (
     _estimate_syllables,
     analyze_text,
+    build_ngram_profile,
     collocations,
     detect_language,
     detect_language_details,
+    detect_language_ngram,
+    detect_language_ngram_details,
     extract_keywords,
     filter_tokens,
     generate_ngrams,
@@ -257,7 +260,21 @@ class TestMultilingualSentiment(unittest.TestCase):
 
 class TestCollocations(unittest.TestCase):
     def setUp(self):
-        self.tokens = "o gato preto o gato preto o gato branco e o cão preto".split()
+        self.tokens = [
+            "o",
+            "gato",
+            "preto",
+            "o",
+            "gato",
+            "preto",
+            "o",
+            "gato",
+            "branco",
+            "e",
+            "o",
+            "cão",
+            "preto",
+        ]
 
     def test_llr_ranks_frequent_pair_first(self):
         result = collocations(self.tokens, min_count=2, top_k=3)
@@ -315,6 +332,33 @@ class TestPorterStemmer(unittest.TestCase):
     def test_short_words_untouched(self):
         self.assertEqual(porter_stem("is"), "is")
         self.assertEqual(porter_stem("a"), "a")
+
+
+class TestNgramDetection(unittest.TestCase):
+    def test_profile_is_ranked_and_normalized(self):
+        profile = build_ngram_profile("aaa aaa bb")
+        # padded boundaries: "_aa"/"aa_" occur twice (once per "aaa" word)
+        self.assertEqual(profile[:2], ["_aa", "aa_"])
+        self.assertIn("aaa", profile)
+        self.assertTrue(all(len(t) == 3 for t in profile))
+
+    def test_short_texts_where_hints_fail(self):
+        # the motivating cases: no hint word present, ngram still resolves
+        self.assertEqual(detect_language_ngram("über den fluss"), "German")
+        self.assertEqual(detect_language_ngram("ciao come stai"), "Italian")
+        self.assertEqual(detect_language_ngram("je ne sais pas"), "French")
+        self.assertEqual(detect_language_ngram("não sei dizer"), "Portuguese")
+
+    def test_distances_are_inspectable(self):
+        details = detect_language_ngram_details("the quick brown fox")
+        self.assertEqual(details.language, "English")
+        self.assertFalse(details.fallback)
+        self.assertLess(details.distances["English"], details.distances["German"])
+
+    def test_no_letters_falls_back(self):
+        details = detect_language_ngram_details("12345 !!!")
+        self.assertTrue(details.fallback)
+        self.assertEqual(details.language, "English")
 
 
 if __name__ == "__main__":
