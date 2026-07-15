@@ -22,6 +22,10 @@ versioning: [SemVer](https://semver.org/).
   (`scripts/build_ngram_profiles.py`) for the char n-gram profiles, plus a
   `NOTICE` separating code (MIT) from Wikipedia-derived profiles (CC BY-SA 4.0)
   and evaluation datasets (upstream licenses).
+- Bilingual didactic layer (`app_i18n.py`): EN / PT-BR toggle for the app's
+  on-screen didactic text — method cards, section headers, captions, sidebar
+  labels and tab names. Code, APIs, tool names and JSON output stay English.
+  Key-parity tests (`tests/test_i18n.py`) guard against missing translations.
 
 Planned (see [ROADMAP.md](ROADMAP.md) and [CONTENT_ROADMAP.md](CONTENT_ROADMAP.md)):
 method handbook with hand-computed examples, case-study notebooks, instructor

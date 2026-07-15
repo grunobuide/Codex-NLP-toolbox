@@ -4,6 +4,7 @@ from pathlib import Path
 
 import streamlit as st
 
+import app_i18n
 from nlp_toolbox.languages import LANGUAGE_OPTIONS, get_language_config
 from nlp_toolbox.tools import (
     READABILITY_FORMULAS,
@@ -30,202 +31,23 @@ from nlp_toolbox.tools import (
 
 st.set_page_config(page_title="Codex NLP Toolbox", layout="wide")
 
-TOOL_EXPLANATIONS = {
-    "analyze_text": {
-        "theme": "Descriptive statistics",
-        "what": "Counts and ratio-based summary metrics for the current text.",
-        "how": (
-            "Uses token and sentence counts to compute averages, lexical diversity, "
-            "and reading-time estimate."
-        ),
-        "why": "Gives a fast baseline profile before deeper NLP modeling.",
-        "explore": (
-            "Compare lexical diversity and sentence length between authors, genres, "
-            "or translations."
-        ),
-    },
-    "split_sentences": {
-        "theme": "Text structure",
-        "what": "Rule-based sentence boundary detection.",
-        "how": "Splits on whitespace that follows sentence-ending punctuation.",
-        "why": "Creates sentence units for readability and downstream analysis.",
-        "explore": "Benchmark this regex method against spaCy or Stanza sentence segmentation.",
-    },
-    "tokenize_text": {
-        "theme": "Text structure",
-        "what": "Word-level tokenization.",
-        "how": "Extracts unicode word-like chunks with a regular expression.",
-        "why": "Produces the base representation used by most other tools.",
-        "explore": "Compare regex tokens with subword tokenizers (BPE, WordPiece) on noisy text.",
-    },
-    "generate_ngrams": {
-        "theme": "Text structure",
-        "what": "Sequential phrase construction from tokens.",
-        "how": "Builds contiguous windows of size N across the token list.",
-        "why": "Captures local word order and common phrase patterns.",
-        "explore": "Try skip-grams and PMI scoring to detect collocations beyond adjacency.",
-    },
-    "top_ngrams": {
-        "theme": "Descriptive statistics",
-        "what": "Most frequent N-gram ranking.",
-        "how": "Counts generated N-grams and returns the highest-frequency entries.",
-        "why": "Highlights repeated phrasing and stylistic motifs quickly.",
-        "explore": "Track top N-grams over chapters or time slices for trend analysis.",
-    },
-    "extract_keywords": {
-        "theme": "Information extraction",
-        "what": "Frequency-based keyword extraction.",
-        "how": "Removes stopwords and ranks remaining tokens by count.",
-        "why": "Surfaces likely content-bearing terms without heavy models.",
-        "explore": "Compare frequency keywords against TF-IDF, RAKE, and KeyBERT outputs.",
-    },
-    "readability_score": {
-        "theme": "Descriptive statistics",
-        "what": "Readability estimate using a formula calibrated for the detected language.",
-        "how": (
-            "Words per sentence and estimated syllables per word, weighted by "
-            "language-specific coefficients (Flesch EN, Fernández Huerta ES, "
-            "Kandel–Moles FR, Amstad DE, Franchina–Vacca IT, Martins et al. PT)."
-        ),
-        "why": "Provides a rough complexity signal for educational and editorial use.",
-        "explore": "Compare Flesch with SMOG and Dale-Chall on the same corpus.",
-    },
-    "sentiment_analysis": {
-        "theme": "Sentiment analysis",
-        "what": "Lexicon-based sentiment snapshot.",
-        "how": (
-            "Counts hits from the hand-curated lexicon of the detected language "
-            "(v1, ~75-100 words per polarity) and normalizes by token count. "
-            "No negation handling - see docs/resources.md."
-        ),
-        "why": "Fast interpretable polarity estimate for teaching and quick diagnostics.",
-        "explore": "Compare this lexicon baseline with VADER and transformer sentiment models.",
-    },
-    "word_length_distribution": {
-        "theme": "Language profile",
-        "what": "Histogram of token lengths.",
-        "how": "Counts how many filtered tokens have each character length.",
-        "why": "Reveals writing style and lexical complexity patterns.",
-        "explore": "Contrast distributions across languages and reading levels.",
-    },
-    "detect_language": {
-        "theme": "Language profile",
-        "what": "Hint-based language detection.",
-        "how": "Tokenizes text and scores each language by overlap with language hint sets.",
-        "why": "Provides a transparent automatic language pick for the pipeline.",
-        "explore": "Compare hint matching with fastText language ID on short vs long text.",
-    },
-    "language_hint_hits": {
-        "theme": "Language profile",
-        "what": "Per-language evidence table.",
-        "how": "Counts matched tokens from each language hint vocabulary.",
-        "why": "Explains why auto-detection favored one language over another.",
-        "explore": "Add confusion tests for mixed-language and code-switched inputs.",
-    },
-    "tfidf_keywords": {
-        "theme": "Information extraction",
-        "what": "TF-IDF keyword ranking, using sentences as documents.",
-        "how": (
-            "score(t) = tf(t) x log10(N/df(t)): total frequency weighted down "
-            "when a term appears in many sentences."
-        ),
-        "why": (
-            "Shows why plain frequency overrates ubiquitous words - "
-            "the classic step beyond counting."
-        ),
-        "explore": "Compare freq vs TF-IDF rankings side by side; then try BM25 and KeyBERT.",
-    },
-    "kwic": {
-        "theme": "Text structure",
-        "what": "Keyword-in-context concordance (KWIC).",
-        "how": (
-            "Finds case-insensitive whole-token matches and shows a window of surrounding tokens."
-        ),
-        "why": (
-            "The classic corpus-linguistics view: see how a word is actually used "
-            "before trusting any statistic about it."
-        ),
-        "explore": "Compare contexts of near-synonyms, or the same word across two texts.",
-    },
-    "zipf_table": {
-        "theme": "Descriptive statistics",
-        "what": "Rank-frequency table and plot (Zipf's law).",
-        "how": (
-            "Sorts tokens by frequency; rank 1 = most frequent. Natural text gives "
-            "a straight line in log-log scale (slope near -1)."
-        ),
-        "why": (
-            "One of the most robust empirical laws of language - "
-            "and a two-minute sanity check of any corpus."
-        ),
-        "explore": "Compare the slope across languages and against shuffled or synthetic text.",
-    },
-    "vocabulary_growth": {
-        "theme": "Descriptive statistics",
-        "what": "Vocabulary size as the text is read (type-token growth).",
-        "how": "Counts distinct tokens after every N tokens seen.",
-        "why": "Flattening growth (Heaps' law) reveals lexical richness and text homogeneity.",
-        "explore": "Compare authors or translations of the same work.",
-    },
-    "collocations": {
-        "theme": "Information extraction",
-        "what": "Collocations: adjacent word pairs ranked by log-likelihood (with PMI).",
-        "how": (
-            "PMI = log2(p(xy)/(p(x)p(y))) rewards pairs that co-occur beyond chance; "
-            "LLR (Dunning 1993) keeps rare-pair noise under control via a min-count floor."
-        ),
-        "why": "Fixed expressions and multiword units are invisible to single-word counts.",
-        "explore": "Compare PMI vs LLR rankings; try window-based (non-adjacent) collocations.",
-    },
-    "detect_language_ngram": {
-        "theme": "Language profile",
-        "what": "Character n-gram language detection (Cavnar-Trenkle 1994).",
-        "how": (
-            "Builds the text's ranked trigram profile and measures the out-of-place "
-            "distance to each language's stored profile (trained on Wikipedia extracts)."
-        ),
-        "why": (
-            "Character statistics exist in every token, so short texts still carry "
-            "evidence - measured: 61% vs 29% accuracy on 2-word inputs."
-        ),
-        "explore": "Inspect the shipped profiles in nlp_toolbox/resources/ngram_profiles/.",
-    },
-    "porter_stem": {
-        "theme": "Text structure",
-        "what": "Porter stemmer (English): rule-based suffix stripping.",
-        "how": "Five ordered rule steps conditioned on the measure (vowel-consonant patterns).",
-        "why": (
-            "The classic worked example of rule-based morphology - including its "
-            "famous over-stemming: university and universal collide into univers."
-        ),
-        "explore": "Compare with lemmatization; try Snowball stemmers for other languages.",
-    },
-    "filter_tokens": {
-        "theme": "Text structure",
-        "what": "Token cleaning and pruning.",
-        "how": "Optionally removes stopwords and short tokens based on user controls.",
-        "why": "Reduces noise so counts and rankings reflect content terms.",
-        "explore": "Evaluate stemming/lemmatization and domain-specific stopword lists.",
-    },
-}
 
-THEME_GROUPS = [
-    "Descriptive statistics",
-    "Sentiment analysis",
-    "Information extraction",
-    "Language profile",
-    "Text structure",
-]
+def render_tool_explanation(tool_name: str, lang: str) -> None:
+    """Render a method card in the selected interface language.
 
-
-def render_tool_explanation(tool_name: str) -> None:
-    details = TOOL_EXPLANATIONS[tool_name]
-    with st.expander(f"How this works: `{tool_name}`", expanded=False):
-        st.markdown(f"- **Theme:** {details['theme']}")
-        st.markdown(f"- **What it does:** {details['what']}")
-        st.markdown(f"- **How it works:** {details['how']}")
-        st.markdown(f"- **Why it matters:** {details['why']}")
-        st.markdown(f"- **Explore next:** {details['explore']}")
+    Card *content* is bilingual (``app_i18n.TOOL_CARDS``); the tool name and the
+    grouping theme key stay English so code and API remain language-neutral.
+    """
+    card = app_i18n.TOOL_CARDS[tool_name]
+    labels = app_i18n.CARD_LABELS[lang]
+    text: dict[str, str] = card[lang]  # type: ignore[assignment]
+    theme_label = app_i18n.THEME_LABELS[lang][card["theme"]]
+    with st.expander(labels["expander"].format(tool=tool_name), expanded=False):
+        st.markdown(f"- **{labels['theme']}:** {theme_label}")
+        st.markdown(f"- **{labels['what']}:** {text['what']}")
+        st.markdown(f"- **{labels['how']}:** {text['how']}")
+        st.markdown(f"- **{labels['why']}:** {text['why']}")
+        st.markdown(f"- **{labels['explore']}:** {text['explore']}")
 
 
 st.markdown(
@@ -260,13 +82,17 @@ st.markdown(
 )
 
 st.title("Codex NLP Toolbox")
-st.write(
-    "Upload a text file or paste raw text, then explore NLP techniques across multiple languages."
+
+ui_language = st.radio(
+    "Interface language · Idioma da interface",
+    list(app_i18n.LANGUAGES),
+    horizontal=True,
 )
-st.caption(
-    "This interface is organized by NLP themes and includes method cards "
-    "to explain what each tool does, how it works, and where to explore next."
-)
+LANG = app_i18n.LANGUAGES[ui_language]
+T = app_i18n.UI[LANG]
+
+st.write(T["intro"])
+st.caption(T["intro_caption"])
 
 
 @st.cache_data
@@ -284,17 +110,13 @@ def _load_samples() -> dict[str, str]:
 SAMPLES = _load_samples()
 
 
-def render_benchmarks() -> None:
-    st.markdown("### Benchmarks")
-    st.write(
-        "Toolbox baselines measured against external systems on small, licensed, "
-        "frozen datasets. Reproduce: `uv sync --group evals && "
-        "uv run python -m evals.run --task <task>`."
-    )
+def render_benchmarks(t: dict[str, str]) -> None:
+    st.markdown(f"### {t['benchmarks_header']}")
+    st.write(t["benchmarks_intro"])
     results_dir = Path(__file__).parent / "evals" / "results"
     result_files = sorted(results_dir.glob("*.json")) if results_dir.exists() else []
     if not result_files:
-        st.info("No eval results found. Run the eval harness to generate them.")
+        st.info(t["benchmarks_none"])
         return
     for result_file in result_files:
         data = json.loads(result_file.read_text(encoding="utf-8"))
@@ -311,28 +133,31 @@ def render_benchmarks() -> None:
             )
             rows.append(row)
         st.dataframe(rows, use_container_width=True)
-    st.caption(
-        "Dataset provenance: `evals/DATASETS.md` · failure analysis: `docs/error-analysis.md`"
-    )
+    st.caption(t["benchmarks_provenance"])
 
 
-def render_compare() -> None:
-    st.markdown("### Compare two texts")
-    st.caption("Two translations, two authors, two registers — every metric side by side.")
+def render_compare(t: dict[str, str]) -> None:
+    st.markdown(f"### {t['compare_header']}")
+    st.caption(t["compare_caption"])
     columns = st.columns(2)
     texts: dict[str, str] = {}
     for label, column in zip(("A", "B"), columns, strict=True):
         with column:
             choice = st.selectbox(
-                f"Sample {label}", ["(paste below)", *SAMPLES], key=f"sample_{label}"
+                t["compare_sample"].format(label=label),
+                [t["compare_paste"], *SAMPLES],
+                key=f"sample_{label}",
             )
             default = SAMPLES.get(choice, "")
             # key includes the choice so switching samples refreshes the widget
             texts[label] = st.text_area(
-                f"Text {label}", value=default, height=150, key=f"text_{label}_{choice}"
+                t["compare_text"].format(label=label),
+                value=default,
+                height=150,
+                key=f"text_{label}_{choice}",
             )
     if not (texts["A"].strip() and texts["B"].strip()):
-        st.info("Provide both texts to compare.")
+        st.info(t["compare_need_both"])
         return
     metric_rows: list[dict[str, object]] = []
     keyword_summary: dict[str, str] = {}
@@ -362,66 +187,66 @@ def render_compare() -> None:
         for row in metric_rows:
             row[f"Text {label}"] = column_values[str(row["metric"])]
     st.dataframe(metric_rows, use_container_width=True)
-    st.caption(
-        "Readability formulas differ per language — compare readability across texts "
-        "only when both are in the same language (see docs/error-analysis.md)."
-    )
+    st.caption(t["compare_readability_note"])
     for label in ("A", "B"):
-        st.markdown(f"**Top keywords {label}:** {keyword_summary[label]}")
+        st.markdown(t["compare_top_keywords"].format(label=label, keywords=keyword_summary[label]))
 
 
 mode = st.radio(
     "Mode",
-    ["Analyze", "Compare two texts", "Benchmarks"],
+    ["analyze", "compare", "benchmarks"],
+    format_func=lambda key: T[f"mode_{key}"],
     horizontal=True,
     label_visibility="collapsed",
 )
 
-if mode == "Benchmarks":
-    render_benchmarks()
-elif mode == "Compare two texts":
-    render_compare()
+if mode == "benchmarks":
+    render_benchmarks(T)
+elif mode == "compare":
+    render_compare(T)
 else:
     with st.sidebar:
-        st.header("Input")
-        uploaded_file = st.file_uploader("Upload a text file", type=["txt"])
-        text_input = st.text_area("Or paste raw text", height=200)
+        st.header(T["sidebar_input"])
+        uploaded_file = st.file_uploader(T["upload"], type=["txt"])
+        text_input = st.text_area(T["paste"], height=200)
         sample_names = list(SAMPLES)
-        sample_choice = st.selectbox("Or load a sample text", ["None", *sample_names])
-        language_choice = st.selectbox("Language", options=["Auto"] + LANGUAGE_OPTIONS, index=0)
-        auto_detector = st.selectbox(
-            "Auto detector",
-            options=["Character n-grams (recommended)", "Hint words (baseline)"],
-            index=0,
-            help=(
-                "Which detector drives analysis in Auto mode (stopwords, readability, "
-                "sentiment, language config). Char n-grams scored 98.9% vs 75.6% for hint "
-                "words on the language-ID benchmark. Hint words stay available as a "
-                "transparent, inspectable baseline."
-            ),
+        sample_choice = st.selectbox(
+            T["sample"],
+            ["None", *sample_names],
+            format_func=lambda key: T["sample_none"] if key == "None" else key,
         )
-        st.header("Customizations")
-        lowercase_tokens = st.checkbox("Lowercase tokens", value=True)
-        remove_stopwords = st.checkbox("Remove stopwords", value=True)
-        min_token_length = st.slider("Minimum token length", 1, 8, 1)
-        max_preview_tokens = st.slider("Tokens to preview", 10, 200, 50, step=10)
-        st.header("Tools")
-        show_analysis = st.checkbox("Basic stats", value=True)
-        show_sentences = st.checkbox("Sentence splitting", value=True)
-        show_tokens = st.checkbox("Tokenization", value=True)
-        show_ngrams = st.checkbox("N-grams", value=False)
-        show_keywords = st.checkbox("Keyword extraction", value=True)
-        show_top_ngrams = st.checkbox("Top N-grams", value=True)
-        show_readability = st.checkbox("Readability", value=True)
-        show_sentiment = st.checkbox("Sentiment snapshot", value=True)
-        show_word_lengths = st.checkbox("Word length distribution", value=True)
-        show_zipf = st.checkbox("Zipf rank-frequency", value=False)
-        show_vocab_growth = st.checkbox("Vocabulary growth", value=False)
-        show_tfidf = st.checkbox("TF-IDF keywords", value=True)
-        show_kwic = st.checkbox("KWIC concordance", value=False)
-        show_collocations = st.checkbox("Collocations (PMI/LLR)", value=False)
-        show_stems = st.checkbox("Porter stems (English)", value=False)
-        show_language_hints = st.checkbox("Language hint matches", value=False)
+        language_choice = st.selectbox(
+            T["analysis_language"], options=["Auto"] + LANGUAGE_OPTIONS, index=0
+        )
+        auto_detector = st.selectbox(
+            T["auto_detector"],
+            options=["ngram", "hints"],
+            index=0,
+            format_func=lambda key: T[f"auto_detector_{key}"],
+            help=T["auto_detector_help"],
+        )
+        st.header(T["customizations"])
+        lowercase_tokens = st.checkbox(T["lowercase"], value=True)
+        remove_stopwords = st.checkbox(T["remove_stopwords"], value=True)
+        min_token_length = st.slider(T["min_token_length"], 1, 8, 1)
+        max_preview_tokens = st.slider(T["tokens_preview"], 10, 200, 50, step=10)
+        st.header(T["tools"])
+        show_analysis = st.checkbox(T["cb_basic_stats"], value=True)
+        show_sentences = st.checkbox(T["cb_sentences"], value=True)
+        show_tokens = st.checkbox(T["cb_tokens"], value=True)
+        show_ngrams = st.checkbox(T["cb_ngrams"], value=False)
+        show_keywords = st.checkbox(T["cb_keywords"], value=True)
+        show_top_ngrams = st.checkbox(T["cb_top_ngrams"], value=True)
+        show_readability = st.checkbox(T["cb_readability"], value=True)
+        show_sentiment = st.checkbox(T["cb_sentiment"], value=True)
+        show_word_lengths = st.checkbox(T["cb_word_lengths"], value=True)
+        show_zipf = st.checkbox(T["cb_zipf"], value=False)
+        show_vocab_growth = st.checkbox(T["cb_vocab_growth"], value=False)
+        show_tfidf = st.checkbox(T["cb_tfidf"], value=True)
+        show_kwic = st.checkbox(T["cb_kwic"], value=False)
+        show_collocations = st.checkbox(T["cb_collocations"], value=False)
+        show_stems = st.checkbox(T["cb_stems"], value=False)
+        show_language_hints = st.checkbox(T["cb_language_hints"], value=False)
 
     text_content = ""
     if uploaded_file is not None:
@@ -434,7 +259,7 @@ else:
     if text_content.strip():
         detection = detect_language_details(text_content)
         ngram_detection = detect_language_ngram_details(text_content)
-        use_ngram = auto_detector.startswith("Character")
+        use_ngram = auto_detector == "ngram"
 
         if language_choice != "Auto":
             detected_language = language_choice
@@ -448,24 +273,21 @@ else:
 
         config = get_language_config(detected_language)
 
-        st.subheader("Detected language")
+        st.subheader(T["detected_language"])
         st.write(f"**{detected_language}**")
         if language_choice == "Auto":
-            active = "char n-grams (Cavnar-Trenkle)" if use_ngram else "hint words"
-            st.caption(f"Active detector: **{active}** — drives every language-dependent method.")
+            active = T["detector_ngram_name"] if use_ngram else T["detector_hints_name"]
+            st.caption(T["active_detector"].format(detector=active))
             if use_ngram:
-                st.caption(f"For comparison, hint words say: **{detection.language}**")
+                st.caption(T["compare_hints"].format(language=detection.language))
                 if ngram_detection.fallback:
-                    st.caption("No letters found - defaulted to English (documented fallback).")
+                    st.caption(T["fallback_ngram"])
             else:
-                st.caption(f"For comparison, char n-grams say: **{ngram_detection.language}**")
+                st.caption(T["compare_ngram"].format(language=ngram_detection.language))
                 if detection.fallback:
-                    st.caption("No hint word matched - defaulted to English (documented fallback).")
+                    st.caption(T["fallback_hints"])
                 elif detection.tied_with:
-                    st.caption(
-                        f"Tie with {', '.join(detection.tied_with)} - "
-                        "resolved by fixed language order."
-                    )
+                    st.caption(T["tie_note"].format(langs=", ".join(detection.tied_with)))
 
         sentences = split_sentences(text_content)
         raw_tokens = tokenize_text(text_content, lowercase=lowercase_tokens)
@@ -475,203 +297,203 @@ else:
 
         tabs = st.tabs(
             [
-                "Descriptive statistics",
-                "Text structure",
-                "Information extraction",
-                "Sentiment analysis",
-                "Language profile",
-                "Method catalog",
+                T["tab_descriptive"],
+                T["tab_structure"],
+                T["tab_extraction"],
+                T["tab_sentiment"],
+                T["tab_language"],
+                T["tab_catalog"],
             ]
         )
 
         with tabs[0]:
             if show_analysis:
-                st.markdown("### Basic stats")
+                st.markdown(f"### {T['h_basic_stats']}")
                 stats = analyze_text(text_content, tokens, sentences)
                 st.json(stats)
-                render_tool_explanation("analyze_text")
+                render_tool_explanation("analyze_text", LANG)
 
             if show_readability:
-                st.markdown("### Readability")
+                st.markdown(f"### {T['h_readability']}")
                 score = readability_score(text_content, tokens, sentences, detected_language)
                 formula = READABILITY_FORMULAS.get(
                     detected_language, READABILITY_FORMULAS["English"]
                 )
                 st.metric(formula.name, score)
-                st.caption(f"Language-calibrated formula. Reference: {formula.reference}")
-                render_tool_explanation("readability_score")
+                st.caption(T["readability_caption"].format(reference=formula.reference))
+                render_tool_explanation("readability_score", LANG)
 
             if show_top_ngrams:
-                st.markdown("### Top N-grams")
-                top_n_value = st.slider("Top N-gram size", 2, 5, 2)
-                top_ngram_count = st.slider("Top N-grams", 5, 30, 10)
+                st.markdown(f"### {T['h_top_ngrams']}")
+                top_n_value = st.slider(T["top_ngram_size"], 2, 5, 2)
+                top_ngram_count = st.slider(T["top_ngram_count"], 5, 30, 10)
                 top_ngram_stats = top_ngrams(tokens, top_n_value, top_k=top_ngram_count)
                 st.write(top_ngram_stats)
-                render_tool_explanation("top_ngrams")
+                render_tool_explanation("top_ngrams", LANG)
 
             if show_word_lengths:
-                st.markdown("### Word length distribution")
+                st.markdown(f"### {T['h_word_lengths']}")
                 length_distribution = word_length_distribution(tokens)
                 st.bar_chart(length_distribution)
-                render_tool_explanation("word_length_distribution")
+                render_tool_explanation("word_length_distribution", LANG)
 
             if show_zipf:
-                st.markdown("### Zipf rank-frequency")
+                st.markdown(f"### {T['h_zipf']}")
                 zipf_rows = zipf_table(tokens, top_k=100)
                 log_points = {
                     "log10(count)": [math.log10(row["count"]) for row in zipf_rows],
                 }
                 st.line_chart(log_points)
-                st.caption(
-                    "x-axis: rank (log-spaced in nature; linear here). Straightish descent = Zipf."
-                )
+                st.caption(T["zipf_caption"])
                 st.dataframe(zipf_rows[:20])
-                render_tool_explanation("zipf_table")
+                render_tool_explanation("zipf_table", LANG)
 
             if show_vocab_growth:
-                st.markdown("### Vocabulary growth")
+                st.markdown(f"### {T['h_vocab_growth']}")
                 growth = vocabulary_growth(tokens, step=max(50, len(tokens) // 50 or 1))
-                st.line_chart({"vocabulary size": [point["vocabulary_size"] for point in growth]})
-                render_tool_explanation("vocabulary_growth")
+                st.line_chart(
+                    {T["vocab_growth_label"]: [point["vocabulary_size"] for point in growth]}
+                )
+                render_tool_explanation("vocabulary_growth", LANG)
 
         with tabs[1]:
             if show_sentences:
-                st.markdown("### Sentence splitting")
+                st.markdown(f"### {T['h_sentences']}")
                 st.write(sentences[:10])
-                st.caption(f"Showing {min(10, len(sentences))} of {len(sentences)} sentences")
-                render_tool_explanation("split_sentences")
+                st.caption(
+                    T["sentences_caption"].format(
+                        shown=min(10, len(sentences)), total=len(sentences)
+                    )
+                )
+                render_tool_explanation("split_sentences", LANG)
 
             if show_tokens:
-                st.markdown("### Tokens")
+                st.markdown(f"### {T['h_tokens']}")
                 st.write(tokens[:max_preview_tokens])
                 st.caption(
-                    f"Showing {min(max_preview_tokens, len(tokens))} of {len(tokens)} tokens"
+                    T["tokens_caption"].format(
+                        shown=min(max_preview_tokens, len(tokens)), total=len(tokens)
+                    )
                 )
-                render_tool_explanation("tokenize_text")
-                render_tool_explanation("filter_tokens")
+                render_tool_explanation("tokenize_text", LANG)
+                render_tool_explanation("filter_tokens", LANG)
 
             if show_stems:
-                st.markdown("### Porter stems (English)")
+                st.markdown(f"### {T['h_stems']}")
                 stem_rows = [
                     {"token": token, "stem": porter_stem(token)}
                     for token in tokens[:30]
                     if porter_stem(token) != token
                 ]
                 st.dataframe(stem_rows)
-                render_tool_explanation("porter_stem")
+                render_tool_explanation("porter_stem", LANG)
 
             if show_kwic:
-                st.markdown("### KWIC concordance")
-                kwic_keyword = st.text_input("Keyword", value="")
+                st.markdown(f"### {T['h_kwic']}")
+                kwic_keyword = st.text_input(T["kwic_keyword"], value="")
                 if kwic_keyword.strip():
-                    kwic_window = st.slider("Context window (tokens)", 2, 10, 5)
+                    kwic_window = st.slider(T["kwic_window"], 2, 10, 5)
                     matches = kwic(
                         tokenize_text(text_content, lowercase=False),
                         kwic_keyword.strip(),
                         window=kwic_window,
                     )
-                    st.caption(f"{len(matches)} match(es)")
+                    st.caption(T["kwic_matches"].format(count=len(matches)))
                     st.dataframe(matches)
-                render_tool_explanation("kwic")
+                render_tool_explanation("kwic", LANG)
 
             if show_ngrams:
-                st.markdown("### N-grams")
-                n_value = st.slider("N", 2, 5, 2)
+                st.markdown(f"### {T['h_ngrams']}")
+                n_value = st.slider(T["ngrams_n"], 2, 5, 2)
                 ngrams = generate_ngrams(tokens, n_value)
                 st.write(ngrams[:30])
-                st.caption(f"Showing {min(30, len(ngrams))} of {len(ngrams)} n-grams")
-                render_tool_explanation("generate_ngrams")
+                st.caption(
+                    T["ngrams_caption"].format(shown=min(30, len(ngrams)), total=len(ngrams))
+                )
+                render_tool_explanation("generate_ngrams", LANG)
 
         with tabs[2]:
             if show_keywords or show_tfidf:
-                st.markdown("### Keywords")
-                keyword_count = st.slider("Top keywords", 5, 30, 10)
+                st.markdown(f"### {T['h_keywords']}")
+                keyword_count = st.slider(T["keyword_count"], 5, 30, 10)
                 col_freq, col_tfidf = st.columns(2)
                 if show_keywords:
                     with col_freq:
-                        st.markdown("**Frequency** (stopwords removed)")
+                        st.markdown(T["keywords_freq"])
                         keywords = extract_keywords(tokens, config, top_k=keyword_count)
                         st.write(keywords)
                 if show_tfidf:
                     with col_tfidf:
-                        st.markdown("**TF-IDF** (sentences as documents)")
+                        st.markdown(T["keywords_tfidf"])
                         sentence_docs = [
                             filter_tokens(tokenize_text(sentence), config) for sentence in sentences
                         ]
                         st.write(tfidf_keywords(sentence_docs, top_k=keyword_count))
                 if show_keywords:
-                    render_tool_explanation("extract_keywords")
+                    render_tool_explanation("extract_keywords", LANG)
                 if show_tfidf:
-                    render_tool_explanation("tfidf_keywords")
+                    render_tool_explanation("tfidf_keywords", LANG)
 
             if show_collocations:
-                st.markdown("### Collocations")
-                min_count = st.slider("Minimum pair frequency", 2, 10, 2)
-                over_filtered = st.checkbox(
-                    "Collocations over filtered token sequence", value=False
-                )
+                st.markdown(f"### {T['h_collocations']}")
+                min_count = st.slider(T["colloc_min_count"], 2, 10, 2)
+                over_filtered = st.checkbox(T["colloc_over_filtered"], value=False)
                 if over_filtered:
                     collocation_tokens = tokens
-                    st.caption(
-                        "Adjacency may differ from the original text: stopwords and short "
-                        "tokens were removed before pairing."
-                    )
+                    st.caption(T["colloc_filtered_caption"])
                 else:
                     collocation_tokens = tokenize_text(text_content, lowercase=lowercase_tokens)
-                    st.caption("Adjacent bigrams over the original token sequence.")
+                    st.caption(T["colloc_original_caption"])
                 st.write(collocations(collocation_tokens, min_count=min_count, top_k=15))
-                render_tool_explanation("collocations")
+                render_tool_explanation("collocations", LANG)
 
         with tabs[3]:
             if show_sentiment:
-                st.markdown("### Sentiment snapshot")
+                st.markdown(f"### {T['h_sentiment']}")
                 sentiment = sentiment_analysis(tokens, detected_language)
                 st.json(sentiment)
-                render_tool_explanation("sentiment_analysis")
+                render_tool_explanation("sentiment_analysis", LANG)
 
         with tabs[4]:
-            st.markdown("### Detected language")
+            st.markdown(f"### {T['detected_language']}")
             st.write(f"**{detected_language}**")
-            render_tool_explanation("detect_language")
+            render_tool_explanation("detect_language", LANG)
             ngram_details = detect_language_ngram_details(text_content)
-            st.markdown("### Char n-gram detection")
-            st.write(f"**{ngram_details.language}** — closest profile (lowest distance)")
+            st.markdown(f"### {T['h_ngram_detection']}")
+            st.write(T["ngram_closest"].format(language=ngram_details.language))
             if ngram_details.distances:
                 ranked = sorted(ngram_details.distances.items(), key=lambda item: item[1])
                 distance_rows = [
                     {
-                        "Rank": rank,
-                        "Language": language,
-                        "Distance": distance,
-                        "Closest": "◀ closest" if rank == 1 else "",
+                        T["col_rank"]: rank,
+                        T["col_language"]: language,
+                        T["col_distance"]: distance,
+                        T["col_closest"]: T["closest_marker"] if rank == 1 else "",
                     }
                     for rank, (language, distance) in enumerate(ranked, start=1)
                 ]
                 st.dataframe(distance_rows, use_container_width=True, hide_index=True)
-                st.caption(
-                    "Out-of-place distance: LOWER = closer to the language profile. "
-                    "Rank 1 is the detector's pick."
-                )
+                st.caption(T["distance_caption"])
             else:
-                st.caption("No letters in the text - defaulted to English (documented fallback).")
-            render_tool_explanation("detect_language_ngram")
+                st.caption(T["distance_fallback"])
+            render_tool_explanation("detect_language_ngram", LANG)
 
             if show_language_hints:
-                st.markdown("### Language hint matches")
+                st.markdown(f"### {T['h_language_hints']}")
                 hint_scores = language_hint_hits(raw_tokens)
                 st.bar_chart(hint_scores)
-                render_tool_explanation("language_hint_hits")
+                render_tool_explanation("language_hint_hits", LANG)
 
         with tabs[5]:
-            st.markdown("### NLP method catalog")
-            st.write("Use this as a map of all tools available in this app, grouped by theme.")
-            for theme in THEME_GROUPS:
-                st.markdown(f"#### {theme}")
+            st.markdown(f"### {T['h_catalog']}")
+            st.write(T["catalog_intro"])
+            for theme in app_i18n.THEME_ORDER:
+                st.markdown(f"#### {app_i18n.THEME_LABELS[LANG][theme]}")
                 themed_tools = [
-                    name for name, details in TOOL_EXPLANATIONS.items() if details["theme"] == theme
+                    name for name, card in app_i18n.TOOL_CARDS.items() if card["theme"] == theme
                 ]
                 for tool_name in themed_tools:
-                    render_tool_explanation(tool_name)
+                    render_tool_explanation(tool_name, LANG)
         st.divider()
         export_payload = {
             "language": detected_language,
@@ -687,11 +509,11 @@ else:
             "keywords": extract_keywords(tokens, config, top_k=15),
         }
         st.download_button(
-            "Export analysis (JSON)",
+            T["export_button"],
             json.dumps(export_payload, ensure_ascii=False, indent=2),
             file_name="codex_nlp_analysis.json",
             mime="application/json",
         )
 
     else:
-        st.info("Upload a text file or paste text to get started.")
+        st.info(T["get_started"])

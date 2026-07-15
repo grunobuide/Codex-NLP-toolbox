@@ -74,6 +74,12 @@ select = [
     "C4",  # flake8-comprehensions
 ]
 
+[tool.ruff.lint.per-file-ignores]
+# app_i18n.py is a pure translation-data module: didactic sentences read (and
+# translate) better on a single line than wrapped mid-phrase, so line length
+# is not enforced there. All other files keep the 100-column limit.
+"app_i18n.py" = ["E501"]
+
 [tool.mypy]
 python_version = "3.10"
 strict = true
