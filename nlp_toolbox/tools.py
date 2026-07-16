@@ -238,6 +238,23 @@ def language_hint_hits(tokens: list[str]) -> dict[str, int]:
     return scores
 
 
+def language_hint_evidence(tokens: list[str]) -> dict[str, dict[str, int]]:
+    """Per language, the exact hint tokens that matched and how often each did.
+
+    Full-explainability companion to ``language_hint_hits``: instead of a bare
+    count, it returns ``{language: {matched_token: occurrences}}`` so the
+    decision can be traced word by word ("which words decided?"). The sum of
+    a language's values equals its ``language_hint_hits`` score.
+    """
+    evidence: dict[str, dict[str, int]] = {}
+    for language in LANGUAGE_OPTIONS:
+        config = get_language_config(language)
+        hints = config["hints"]
+        matches = Counter(token for token in tokens if token in hints)
+        evidence[language] = dict(matches.most_common())
+    return evidence
+
+
 class LanguageDetection(NamedTuple):
     """Outcome of hint-word language detection, with its full evidence.
 

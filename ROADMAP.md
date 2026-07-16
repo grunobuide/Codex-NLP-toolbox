@@ -1,5 +1,12 @@
 # Roadmap
 
+> **Status (2026-07-16): all engineering phases below are complete** (v1.1.0).
+> The project is stable and in maintenance; active work continues on the
+> content track ([CONTENT_ROADMAP.md](CONTENT_ROADMAP.md)), currently paused
+> mid-pilot with open decisions documented in the
+> [strategy doc](docs/Codex_NLP_Content_Strategy_and_Pilot_Decisions.md).
+> To pick the project up: [CONTRIBUTING.md](CONTRIBUTING.md).
+
 Engineering track. For what the toolbox should *contain* — resources, methods, and teaching material — see [CONTENT_ROADMAP.md](CONTENT_ROADMAP.md); the sequencing table there pairs content work with each phase below.
 
 Target state: a repository where a technical reviewer can verify in under two minutes that the project is **installable, tested, measured against external baselines, and honest about its failure modes**.

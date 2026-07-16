@@ -52,40 +52,72 @@ Plus **case studies** as runnable notebooks in `examples/` (Colab badge):
 ## The course
 
 The remaining content work is organized around a recorded course:
-**"Linguística de corpus computacional: métodos transparentes"** — 7 lessons
+**"Fundamentos transparentes de PLN: do texto à avaliação"** — 7 lessons
 of 15–30 min in Brazilian Portuguese, for Letters/Linguistics students, with
 the live app as the on-screen material. Full syllabus and per-lesson
 recording scripts: [docs/course/syllabus.md](docs/course/syllabus.md).
+Editorial contract, pilot plan and open decisions:
+[docs/Codex_NLP_Content_Strategy_and_Pilot_Decisions.md](docs/Codex_NLP_Content_Strategy_and_Pilot_Decisions.md).
+
+### What "six first-class languages" means, precisely
+
+| Layer | Coverage |
+|---|---|
+| Interface & didactic text | EN + PT-BR toggle (app), 6 analysis languages |
+| Linguistic resources (stopwords, sentiment lexicons, readability formulas, n-gram profiles, samples) | all 6 languages, real parity |
+| Evaluation | language ID: all 6 · sentiment & segmentation: **English only** (gold datasets) |
+| Language-specific methods | Porter stemmer: **English only** |
+
+Public promises (README, course) must distinguish these layers.
 
 | # | Lesson (PT-BR) | App surface | Needs building |
 |---|---|---|---|
-| 1 | O texto como dados: tokens, sentenças, tipos e ocorrências | Analyze → Text structure | lesson presets + bilingual cards |
+| 1 | O texto como dados: tokens, sentenças, tipos e ocorrências | Analyze → Text structure | lesson preset |
 | 2 | Leis estatísticas da língua: Zipf e crescimento do vocabulário | Analyze → Descriptive stats | notebook *One novel, six languages* |
-| 3 | Palavras-chave e colocações: frequência, TF-IDF, KWIC, PMI | Analyze → Information extraction | **collocations (PMI/LLR)** |
-| 4 | Que língua é essa? Evidência, empates e fallback | Analyze → Language profile | **char n-gram detector** + short-text notebook |
-| 5 | Sentimento com dicionários: léxicos, morfologia e negação | Analyze → Sentiment | **Porter stemmer** + lexicon-size notebook |
+| 3 | Palavras-chave e colocações: frequência, TF-IDF, KWIC, PMI | Analyze → Information extraction | (ready) |
+| 4 | Que língua é essa? Evidência, empates e fallback | Analyze → Language profile | **pilot package** (see strategy doc) |
+| 5 | Sentimento com dicionários: léxicos, morfologia e negação | Analyze → Sentiment | lexicon-size notebook |
 | 6 | Legibilidade e estilo: fórmulas por língua, comparação de traduções | Compare two texts | (ready) |
 | 7 | Como saber se funciona? Ouro, métricas e análise de erros | Benchmarks | (ready — the signature lesson) |
 
+All seven lessons are now recordable content-wise; what remains is the
+production system (presets, exercises, notebooks) — built pilot-first.
+
 ### Course phases
 
-- [x] **C1 — Missing methods** ✅ (unblocks lessons 3–5): character n-gram
-  detection (Cavnar–Trenkle) with eval entry proving the upgrade over
-  hint-words; collocations via PMI and log-likelihood; Porter stemmer with
-  documented failure cases. Each with tests, method card, CLI subcommand.
-- [ ] **C2 — Bilingual didactic layer**: EN/PT-BR toggle for the app's
-  didactic strings (method cards, captions, tour) — code and API stay in
-  English; the recorded screen reads in Portuguese.
-- [ ] **C3 — Handbook** (`docs/handbook/`, bilingual): one page per method
-  with the formula, a worked example computed by hand, limitations (from
-  the error analysis) and references. This is the course's *apostila*.
-- [ ] **C4 — Per-lesson material** (`docs/course/`): recording script per
-  lesson (what to show, what to type, expected numbers on screen),
-  exercises with answer keys, the three case-study notebooks in
-  `examples/` (Colab-ready).
-- [ ] **C5 — Lesson mode in the app**: a lesson selector that pre-loads the
-  right sample text, pre-enables the right tools, and shows a short guided
-  reading — so each recording starts from a reproducible screen state.
+Revised 2026-07-16 (see the strategy doc for rationale): validate one full
+lesson before mass-producing seven.
+
+- [x] **C1 — Missing methods** ✅ (2026-07-14): character n-gram detection
+  (Cavnar–Trenkle) with eval entry proving the upgrade over hint-words;
+  collocations via PMI and log-likelihood; Porter stemmer with documented
+  failure cases. Each with tests, method card, CLI subcommand.
+- [x] **C2 — Bilingual didactic layer** ✅ (2026-07-15): EN/PT-BR toggle for
+  the app's didactic strings (`app_i18n.py`, key-parity tests) — code and
+  API stay in English; the recorded screen reads in Portuguese.
+- [x] **C2.1 — Content QA** ✅ (2026-07-16): syllabus aligned with the app
+  (lesson 2 corpus roles, lesson 5 English-only Porter examples, no fixed
+  numbers in scripts), `language_hint_evidence` API so the lesson-4 promise
+  ("which words decided") is literally true, language-coverage matrix above.
+- [x] **C2.2 — Editorial contract** ✅ (2026-07-16):
+  [docs/Codex_NLP_Content_Strategy_and_Pilot_Decisions.md](docs/Codex_NLP_Content_Strategy_and_Pilot_Decisions.md)
+  — audience, promise, title, format, language policy, CTA hierarchy,
+  success metrics; open decisions tracked there (channel, weekly cadence).
+- [ ] **C3 — Vertical slice (pilot: lesson 4)**: one complete lesson, app to
+  video. Done: first handbook page
+  ([docs/handbook/deteccao-de-idioma.md](docs/handbook/deteccao-de-idioma.md)),
+  versioned preset with test-pinned expected results
+  ([docs/course/aula-04/preset.md](docs/course/aula-04/preset.md),
+  `tests/test_lesson_presets.py`), exercises + commented answer key
+  ([docs/course/aula-04/exercicios.md](docs/course/aula-04/exercicios.md)).
+  Remaining: lesson page, video (blocked on channel decision), optional
+  notebook, one short derived piece. Validates format before scaling.
+- [ ] **C4 — Content system**: templates, glossary, preset conventions and
+  per-lesson contract distilled from the pilot's lessons learned.
+- [ ] **C5 — First season**: the seven lessons and their essential materials
+  (production order 4 → 7 → 1 → 3 → 2 → 5 → 6; publication order 1–7).
+- [ ] **C6 — Expansion**: advanced notebooks, workshops, derived content,
+  instructor guide, lesson mode in the app.
 
 ## Sequencing with the engineering roadmap
 

@@ -256,15 +256,21 @@ TOOL_CARDS: dict[str, dict[str, object]] = {
     "language_hint_hits": {
         "theme": "Language profile",
         "en": {
-            "what": "Per-language evidence table.",
-            "how": "Counts matched tokens from each language hint vocabulary.",
-            "why": "Explains why auto-detection favored one language over another.",
+            "what": "Per-language evidence table showing the exact words that matched.",
+            "how": (
+                "Counts matched tokens from each language hint vocabulary and lists "
+                "each matching word with its number of occurrences."
+            ),
+            "why": "Explains why auto-detection favored one language over another, word by word.",
             "explore": "Add confusion tests for mixed-language and code-switched inputs.",
         },
         "pt": {
-            "what": "Tabela de evidências por idioma.",
-            "how": "Conta os tokens correspondentes em cada vocabulário de indícios.",
-            "why": "Explica por que a autodetecção favoreceu um idioma em vez de outro.",
+            "what": "Tabela de evidências por idioma mostrando as palavras exatas que corresponderam.",
+            "how": (
+                "Conta os tokens correspondentes em cada vocabulário de indícios e lista "
+                "cada palavra correspondente com seu número de ocorrências."
+            ),
+            "why": "Explica, palavra por palavra, por que a autodetecção favoreceu um idioma.",
             "explore": "Adicione testes de confusão para entradas multilíngues e com code-switching.",
         },
     },
@@ -570,6 +576,12 @@ UI: dict[str, dict[str, str]] = {
         "col_closest": "Closest",
         "closest_marker": "◀ closest",
         "h_language_hints": "Language hint matches",
+        "col_hits": "Hits",
+        "col_matched": "Matched words",
+        "hint_evidence_caption": (
+            "Full explainability: these are the exact words that scored for each language. "
+            "The winning language is simply the row with the most hits."
+        ),
         "h_catalog": "NLP method catalog",
         "catalog_intro": "Use this as a map of all tools available in this app, grouped by theme.",
         "export_button": "Export analysis (JSON)",
@@ -710,6 +722,12 @@ UI: dict[str, dict[str, str]] = {
         "col_closest": "Mais próximo",
         "closest_marker": "◀ mais próximo",
         "h_language_hints": "Correspondências de indícios de idioma",
+        "col_hits": "Ocorrências",
+        "col_matched": "Palavras correspondentes",
+        "hint_evidence_caption": (
+            "Explicabilidade total: estas são exatamente as palavras que pontuaram para cada "
+            "idioma. O idioma vencedor é simplesmente a linha com mais ocorrências."
+        ),
         "h_catalog": "Catálogo de métodos de PLN",
         "catalog_intro": (
             "Use isto como um mapa de todas as ferramentas do app, agrupadas por tema."

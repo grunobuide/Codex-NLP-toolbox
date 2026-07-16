@@ -16,6 +16,7 @@ from nlp_toolbox.tools import (
     filter_tokens,
     generate_ngrams,
     kwic,
+    language_hint_evidence,
     language_hint_hits,
     porter_stem,
     readability_score,
@@ -481,7 +482,20 @@ else:
             if show_language_hints:
                 st.markdown(f"### {T['h_language_hints']}")
                 hint_scores = language_hint_hits(raw_tokens)
-                st.bar_chart(hint_scores)
+                hint_evidence = language_hint_evidence(raw_tokens)
+                evidence_rows = [
+                    {
+                        T["col_language"]: language,
+                        T["col_hits"]: hint_scores[language],
+                        T["col_matched"]: ", ".join(
+                            f"{token} ×{count}" if count > 1 else token
+                            for token, count in hint_evidence[language].items()
+                        ),
+                    }
+                    for language in sorted(hint_scores, key=lambda lang: -hint_scores[lang])
+                ]
+                st.dataframe(evidence_rows, use_container_width=True, hide_index=True)
+                st.caption(T["hint_evidence_caption"])
                 render_tool_explanation("language_hint_hits", LANG)
 
         with tabs[5]:

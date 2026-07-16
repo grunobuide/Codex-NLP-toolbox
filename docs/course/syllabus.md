@@ -1,7 +1,10 @@
-# Linguística de corpus computacional: métodos transparentes
+# Fundamentos transparentes de PLN: do texto à avaliação
 
 Curso em 7 aulas (15–30 min cada), gravado com o app ao vivo na tela:
 https://codex-nlp-toolbox.streamlit.app
+
+> Contrato editorial, decisões de formato e plano da aula-piloto:
+> [docs/Codex_NLP_Content_Strategy_and_Pilot_Decisions.md](../Codex_NLP_Content_Strategy_and_Pilot_Decisions.md)
 
 **Público:** estudantes de Letras/Linguística. Nenhum pré-requisito de
 programação — todo método do curso é verificável com lápis e papel, e o
@@ -32,8 +35,11 @@ sentenças, normalização (caixa), diversidade lexical.
    uma palavra? E "d'água"? Mostrar que `don't` fica inteiro e
    `state-of-the-art` vira 4 tokens — decisão do padrão regex, não verdade
    linguística.
-3. Aba *Descriptive statistics* → Basic stats: 140 palavras, 118 tipos,
-   diversidade 0,843. Discutir por que texto curto tem diversidade alta.
+3. Aba *Descriptive statistics* → Basic stats: anotar palavras, tipos e
+   diversidade lexical. Discutir por que texto curto tem diversidade alta.
+   (Os valores exatos dependem do sample e da configuração; o preset
+   versionado da aula, com os números esperados conferidos, faz parte do
+   pacote da aula — não fixar números no roteiro.)
 4. Desligar "Lowercase tokens" e mostrar o vocabulário mudar — "Capitú" e
    "capitú" viram tipos distintos.
 5. Mostrar o method card `tokenize_text` (expandir "How this works").
@@ -51,17 +57,26 @@ e que isso independe do idioma.
 **Conceitos:** lei de Zipf (posto × frequência), lei de Heaps (crescimento
 do vocabulário), comparação entre línguas.
 
+**Divisão de papéis:** o app demonstra o fenômeno em excertos curtos
+(~1.800 caracteres, versionados em `data/samples/`); o experimento de
+corpus com os romances completos acontece no notebook. Deixar isso
+explícito na gravação: os samples são demonstrações, não o corpus.
+
 **Roteiro de tela:**
-1. Carregar *Frankenstein En* (romance inteiro, ~78 mil palavras).
+1. Carregar o excerto *Frankenstein En* (sample do curso; para o romance
+   completo, ver o notebook da aula).
 2. Ligar "Zipf rank-frequency": mostrar a descida quase reta em log —
-   pouquíssimas palavras dominam o texto.
+   pouquíssimas palavras dominam o texto, mesmo num excerto curto.
 3. Ligar "Vocabulary growth": a curva achata — palavras novas rareiam
    conforme o texto avança (Heaps).
 4. Trocar para os samples de outras línguas e mostrar que o formato das
    curvas se mantém: a regularidade é da linguagem humana, não do inglês.
+5. Fechar apontando para o notebook: com ~78 mil palavras do romance
+   completo, as curvas ficam muito mais nítidas — é lá que o experimento
+   de verdade acontece.
 
 **Notebook:** *Um romance, seis línguas* — Zipf, diversidade e legibilidade
-nos seis excertos do corpus do curso.
+nos textos completos (Gutenberg) das seis obras do corpus do curso.
 
 **Exercício:** prever (antes de rodar) qual palavra ocupa o posto 1 em
 cada língua; conferir e explicar por que são sempre gramaticais.
@@ -82,7 +97,7 @@ colocações, PMI / razão de verossimilhança.
    caem no TF-IDF (idf = log10(N/df), calculável à mão).
 2. Aba *Text structure* → KWIC: concordância de "don" — a ferramenta mais
    antiga da linguística de corpus, ainda insubstituível para ver USO.
-3. [Requer C1] Colocações por PMI: pares que aparecem juntos mais do que o
+3. Colocações por PMI/LLR: pares que aparecem juntos mais do que o
    acaso prevê — de "san — cho" a expressões fixas.
 
 **Exercício:** calcular o TF-IDF de 3 termos num texto de 4 sentenças, à
@@ -100,20 +115,27 @@ fallback documentado, n-gramas de caracteres (Cavnar–Trenkle 1994),
 code-switching.
 
 **Roteiro de tela:**
-1. Colar uma frase em português; aba *Language profile*: a tabela de
-   evidência mostra QUAIS palavras decidiram.
+1. Colar uma frase em português; aba *Language profile* → "Language hint
+   matches": a tabela de evidência mostra QUAIS palavras decidiram, com o
+   número de ocorrências de cada uma (`language_hint_evidence`).
 2. Colar "que de": empate ES/FR/PT resolvido por ordem fixa — viés visível,
    não escondido (mostrar o caption de empate).
 3. Colar texto russo: fallback para English com aviso — limite de escopo
    declarado.
 4. Mostrar a tabela do relatório de erros: acurácia despenca de 75,6% para
    28,9% com 2 palavras — evidência esparsa, não ruído.
-5. [Requer C1] Ligar o detector por n-gramas de caracteres e repetir os
-   casos: a acurácia em texto curto salta — e o método continua
-   interpretável (perfis de frequência de trigramas).
+5. Selecionar o detector por n-gramas de caracteres e repetir os casos: a
+   acurácia em texto curto salta — e o método continua interpretável
+   (tabela de distâncias por idioma, menor = mais próximo).
 
 **Notebook:** *Por que a detecção falha em textos curtos* — hint-words vs.
 n-gramas em entradas de tamanho de tweet.
+
+**Materiais da aula (piloto):** preset versionado com resultados testados
+([aula-04/preset.md](aula-04/preset.md)), exercícios com gabarito
+([aula-04/exercicios.md](aula-04/exercicios.md)) e página do handbook
+([../handbook/deteccao-de-idioma.md](../handbook/deteccao-de-idioma.md)).
+Resultados fixados por teste em `tests/test_lesson_presets.py`.
 
 ---
 
@@ -133,9 +155,13 @@ stemming (Porter), escopo da negação.
    isso: 76,7% vs. 80% do VADER.
 3. Mostrar `zero_evidence_fraction` = 48%: quase metade das sentenças não
    tem NENHUMA palavra do léxico — cobertura é o gargalo, não o algoritmo.
-4. [Requer C1] Stemming: "schrecklicher" → "schrecklich"; o Porter como
-   exemplo de normalização por regras, com os erros clássicos dele
-   ("university" → "univers").
+4. Stemming (inglês): "running" → "run", "relational" → "relat"; o Porter
+   como exemplo de normalização por regras, com o erro clássico dele —
+   "university" e "universal" colidem em "univers". Ponte importante:
+   stemming é dependente de língua; o Porter cobre APENAS inglês, e o
+   toolbox não tem stemmers equivalentes para as outras cinco línguas —
+   morfologia rica (PT, IT, DE) é exatamente onde a cobertura do léxico
+   mais sofre sem normalização.
 
 **Notebook:** *Qual o tamanho ideal de um léxico?* — acurácia em função do
 tamanho do léxico, usando o harness de avaliação.

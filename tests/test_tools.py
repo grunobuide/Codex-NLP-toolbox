@@ -1,6 +1,6 @@
 import unittest
 
-from nlp_toolbox.languages import get_language_config
+from nlp_toolbox.languages import LANGUAGE_OPTIONS, get_language_config
 from nlp_toolbox.tools import (
     _estimate_syllables,
     analyze_text,
@@ -14,6 +14,7 @@ from nlp_toolbox.tools import (
     filter_tokens,
     generate_ngrams,
     kwic,
+    language_hint_evidence,
     language_hint_hits,
     porter_stem,
     readability_score,
@@ -105,6 +106,27 @@ class TestNlpTools(unittest.TestCase):
         detected = detect_language("el la que y")
         self.assertEqual(detected, "Spanish")
         self.assertEqual(detect_language("12345"), "English")
+
+    def test_language_hint_evidence_matches_hits(self):
+        tokens = ["que", "de", "que", "casa", "xyz"]
+        evidence = language_hint_evidence(tokens)
+        hits = language_hint_hits(tokens)
+        for language, matched in evidence.items():
+            self.assertEqual(sum(matched.values()), hits[language], language)
+        # "que" matched twice wherever it is a hint word
+        for matched in evidence.values():
+            if "que" in matched:
+                self.assertEqual(matched["que"], 2)
+        # non-hint tokens never appear as evidence
+        for matched in evidence.values():
+            self.assertNotIn("casa", matched)
+            self.assertNotIn("xyz", matched)
+
+    def test_language_hint_evidence_empty(self):
+        evidence = language_hint_evidence([])
+        self.assertEqual(set(evidence), set(LANGUAGE_OPTIONS))
+        for matched in evidence.values():
+            self.assertEqual(matched, {})
 
     def test_estimate_syllables(self):
         self.assertEqual(_estimate_syllables("cake"), 1)

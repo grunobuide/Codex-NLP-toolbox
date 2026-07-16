@@ -5,8 +5,8 @@ title: "Codex NLP Toolbox: transparent linguistic baselines with a reproducible 
 authors:
   - family-names: "Guide"
     given-names: "Bruno"
-version: 1.0.0
-date-released: 2026-07-14
+version: 1.1.0
+date-released: 2026-07-16
 license: MIT
 repository-code: "https://github.com/grunobuide/Codex-NLP-toolbox"
 url: "https://codex-nlp-toolbox.streamlit.app"
