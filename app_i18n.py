@@ -248,8 +248,7 @@ TOOL_CARDS: dict[str, dict[str, object]] = {
             ),
             "why": "Oferece uma escolha automática e transparente de idioma para o pipeline.",
             "explore": (
-                "Compare a correspondência por indícios com o fastText em textos curtos "
-                "e longos."
+                "Compare a correspondência por indícios com o fastText em textos curtos e longos."
             ),
         },
     },

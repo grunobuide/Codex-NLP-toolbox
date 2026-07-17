@@ -21,7 +21,7 @@ from nlp_toolbox.tools import (
 )
 
 FRASE_PT = (
-    "O gato subiu no telhado e a casa ficou em silêncio, " "o que preocupou a vizinha de Capitu."
+    "O gato subiu no telhado e a casa ficou em silêncio, o que preocupou a vizinha de Capitu."
 )
 QUE_DE = "que de"
 RUSSO = "Я не понимаю, что здесь написано, но всё равно интересно."
